@@ -1462,16 +1462,6 @@ function createCard(type, index, label) {
     return card;
 }
 
-function speak(text, callback) {
-    if (!isPlaying) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = currentLang;
-    utterance.volume = document.getElementById('volume-control').value;
-    utterance.rate = 0.9;
-    utterance.onend = () => { if (callback) callback(); };
-    synth.speak(utterance);
-}
-
 function stopGame() {
     isPlaying = false;
     synth.cancel();
