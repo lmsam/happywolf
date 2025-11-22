@@ -1646,7 +1646,7 @@ function init() {
     
     document.getElementById('test-audio-btn').addEventListener('click', () => {
         unlockAudio();
-        speak(currentLang === 'zh-HK' ? "測試音效" : "Audio Test");
+        speak(currentLang === 'zh-HK' ? "天黑請閉眼" : "Everyone, close your eyes");
     });
     
     confirmDeckBtn.addEventListener('click', () => {
