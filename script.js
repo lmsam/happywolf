@@ -692,6 +692,28 @@ function startRevealPhase() {
     // Let's just enable flipping.
 }
 
+
+
+let actionTimerInterval;
+
+function startActionTimer(duration, onComplete) {
+    if (actionTimerInterval) clearInterval(actionTimerInterval);
+    
+    let timeLeft = duration;
+    const timerSpan = document.getElementById('action-timer');
+    if (timerSpan) timerSpan.innerText = `(${timeLeft}s)`;
+    
+    actionTimerInterval = setInterval(() => {
+        timeLeft--;
+        if (timerSpan) timerSpan.innerText = `(${timeLeft}s)`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(actionTimerInterval);
+            if (onComplete) onComplete();
+        }
+    }, 1000);
+}
+
 function finishNightStep() {
     if (!currentNightRole) return;
     if (actionTimerInterval) clearInterval(actionTimerInterval);
