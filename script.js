@@ -759,6 +759,8 @@ function getCardElement(type, index) {
     return document.querySelector(`.table-card[data-type="${type}"][data-index="${index}"]`);
 }
 
+let currentUtterance = null; // Prevent GC on iOS
+
 function speak(text, callback) {
     if (!isPlaying) return;
     
@@ -766,6 +768,8 @@ function speak(text, callback) {
     synth.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
+    currentUtterance = utterance; // Keep reference
+    
     utterance.lang = currentLang;
     utterance.volume = document.getElementById('volume-control').value;
     utterance.rate = 0.9;
@@ -777,6 +781,8 @@ function speak(text, callback) {
             callbackCalled = true;
             callback();
         }
+        // Don't nullify immediately if we want to be safe, but usually fine.
+        // Actually, keeping it until next speak is safer for some browsers.
     };
     
     utterance.onend = done;
@@ -790,6 +796,14 @@ function speak(text, callback) {
     // Fallback: If speech doesn't end within reasonable time (e.g. text length * 200ms + 1s), force callback
     const estimatedDuration = (text.length * 200) + 1000;
     setTimeout(done, estimatedDuration);
+}
+
+function unlockAudio() {
+    // Play silent audio to unlock iOS audio context
+    if (synth) {
+        const utterance = new SpeechSynthesisUtterance('');
+        synth.speak(utterance);
+    }
 }
 
 // --- Interaction Handler ---
@@ -1604,7 +1618,10 @@ function init() {
     
     document.getElementById('lang-toggle').addEventListener('click', toggleLanguage);
     
-    confirmDeckBtn.addEventListener('click', startPeekPhase);
+    confirmDeckBtn.addEventListener('click', () => {
+        unlockAudio();
+        startPeekPhase();
+    });
     
     // Menu Listeners
     menuBtn.addEventListener('click', () => {
@@ -1620,7 +1637,10 @@ function init() {
         stopGame();
     });
     
-    readyBtn.addEventListener('click', startNightPhase);
+    readyBtn.addEventListener('click', () => {
+        unlockAudio();
+        startNightPhase();
+    });
     
     closeModalBtn.addEventListener('click', () => {
         closeModal();
@@ -1637,6 +1657,15 @@ function init() {
             if (gamePhaseState === 'PEEK') completePeek();
         }
     });
+
+    // Unlock Audio on first interaction (iOS Fix)
+    const unlockHandler = () => {
+        unlockAudio();
+        document.body.removeEventListener('click', unlockHandler);
+        document.body.removeEventListener('touchstart', unlockHandler);
+    };
+    document.body.addEventListener('click', unlockHandler);
+    document.body.addEventListener('touchstart', unlockHandler);
     
     // Handle Resize
     window.addEventListener('resize', () => {
