@@ -1690,13 +1690,16 @@ function init() {
     });
 
     // Unlock Audio on first interaction (iOS Fix)
+    // Note: Use touchend/click, as touchstart is often not trusted for AudioContext
     const unlockHandler = () => {
         unlockAudio();
         document.body.removeEventListener('click', unlockHandler);
-        document.body.removeEventListener('touchstart', unlockHandler);
+        document.body.removeEventListener('touchend', unlockHandler);
+        document.body.removeEventListener('keydown', unlockHandler);
     };
     document.body.addEventListener('click', unlockHandler);
-    document.body.addEventListener('touchstart', unlockHandler);
+    document.body.addEventListener('touchend', unlockHandler);
+    document.body.addEventListener('keydown', unlockHandler);
     
     // Handle Resize
     window.addEventListener('resize', () => {
