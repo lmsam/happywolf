@@ -824,8 +824,12 @@ function handleCardClick(type, index) {
     }
     
     if (gamePhaseState === 'NIGHT' && currentNightRole) {
-        // Block interaction if it's a fake turn
-        if (currentNightRole.isFake) return;
+        // Block interaction if it's a fake turn (no player holds this role initially)
+        const activeRoleId = currentNightRole.id;
+        const activePlayerIndex = playerRoles.findIndex(p => p.initialRoleId === activeRoleId);
+        
+        if (activePlayerIndex === -1) return;
+        
         // Block if already completed (waiting for timer)
         if (nightActionState.completed) return;
         
