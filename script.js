@@ -762,8 +762,8 @@ function getCardElement(type, index) {
 let currentUtterance = null; // Prevent GC on iOS
 let audioContext = null; // Web Audio Context for unlocking
 
-function speak(text, callback) {
-    if (!isPlaying) return;
+function speak(text, callback, force = false) {
+    if (!isPlaying && !force) return;
     
     // Ensure resumed (iOS sometimes pauses it)
     if (synth.paused) synth.resume();
@@ -1646,7 +1646,7 @@ function init() {
     
     document.getElementById('test-audio-btn').addEventListener('click', () => {
         unlockAudio();
-        speak(currentLang === 'zh-HK' ? "天黑請閉眼" : "Everyone, close your eyes");
+        speak(currentLang === 'zh-HK' ? "天黑請閉眼" : "Everyone, close your eyes", null, true);
     });
     
     confirmDeckBtn.addEventListener('click', () => {
