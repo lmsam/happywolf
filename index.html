@@ -28,7 +28,12 @@
                     <h3 data-i18n="settingsTitle">遊戲設定 / SETTINGS</h3>
                     <div class="control-group">
                         <label class="control-label" data-i18n="volumeLabel">Volume</label>
-                        <input type="range" id="volume-control" min="0" max="1" step="0.1" value="1">
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                            <input type="range" id="volume-control" min="0" max="1" step="0.1" value="1"
+                                style="flex: 1;">
+                            <button id="test-audio-btn" class="comic-btn small" style="padding: 5px 10px;">🔊
+                                Test</button>
+                        </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label" data-i18n="durationLabel">Day Duration</label>

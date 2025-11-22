@@ -760,9 +760,13 @@ function getCardElement(type, index) {
 }
 
 let currentUtterance = null; // Prevent GC on iOS
+let audioContext = null; // Web Audio Context for unlocking
 
 function speak(text, callback) {
     if (!isPlaying) return;
+    
+    // Ensure resumed (iOS sometimes pauses it)
+    if (synth.paused) synth.resume();
     
     // Cancel any previous speech to prevent queue buildup
     synth.cancel();
@@ -788,6 +792,8 @@ function speak(text, callback) {
     utterance.onend = done;
     utterance.onerror = (e) => {
         console.error("Speech Error:", e);
+        // If error occurs, try to resume and retry? No, just proceed to prevent hang.
+        if (synth.paused) synth.resume();
         done();
     };
     
@@ -799,8 +805,28 @@ function speak(text, callback) {
 }
 
 function unlockAudio() {
-    // Play silent audio to unlock iOS audio context
+    // 1. Web Audio API Unlock (Standard for iOS)
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        
+        // Play silent buffer
+        const buffer = audioContext.createBuffer(1, 1, 22050);
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+    } catch (e) {
+        console.error("AudioContext Unlock Error:", e);
+    }
+
+    // 2. Speech Synthesis Unlock
     if (synth) {
+        if (synth.paused) synth.resume();
         const utterance = new SpeechSynthesisUtterance('');
         synth.speak(utterance);
     }
@@ -1617,6 +1643,11 @@ function init() {
     });
     
     document.getElementById('lang-toggle').addEventListener('click', toggleLanguage);
+    
+    document.getElementById('test-audio-btn').addEventListener('click', () => {
+        unlockAudio();
+        speak(currentLang === 'zh-HK' ? "測試音效" : "Audio Test");
+    });
     
     confirmDeckBtn.addEventListener('click', () => {
         unlockAudio();
