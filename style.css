@@ -5,6 +5,8 @@
     --accent-red: #ff0000;
     --accent-blue: #00f0ff;
     --accent-yellow: #ffea00;
+    --accent-green: #00ff00;
+    --border-width: 3px;
     --border-width: 3px;
     --shadow-offset: 4px;
     --font-main: 'Noto Sans TC', sans-serif;
@@ -810,6 +812,11 @@ body {
     color: black;
 }
 
+.instruction-banner button {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
 /* Table Card States */
 .table-card.revealed {
     background: white;
@@ -895,6 +902,15 @@ body {
     transform: scale(1.15);
     z-index: 20;
     animation: pulse 1s infinite;
+}
+
+.table-card.selected {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 25px var(--accent-green);
+    transform: scale(1.2);
+    z-index: 30;
+    animation: none;
+    /* Solid green */
 }
 
 .table-card.revealed {
