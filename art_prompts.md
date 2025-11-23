@@ -25,6 +25,21 @@ The game uses two primary card display formats:
 
 ---
 
+## Special: Game Logo / Card Back (Square)
+
+**Use this prompt to generate the card back image.**
+**Important:** Use Aspect Ratio 1:1 (Square) for this image.
+
+### Game Logo / Card Back
+
+**Concept:** A striking emblem representing the game.
+**Prompt:**
+
+> A stylized circular emblem for a werewolf game, featuring a fierce wolf head silhouette howling against a large full moon, dynamic scratch marks, "One Night" text in bold manga font (optional), red and dark blue color scheme, vector art style, high contrast, Shonen anime aesthetic, white background.
+> **Midjourney Parameters:** `--ar 1:1 --nijime 6 --s 750`
+
+---
+
 ## Role Prompts
 
 ### 1. Doppelgänger (化身幽靈)
@@ -144,7 +159,7 @@ The game uses two primary card display formats:
 **Concept:** A chaotic character who shifts everyone's cards.
 **Prompt:**
 
-> A clumsy anime character scratching their head in confusion, surrounded by glowing arrows spinning clockwise and anti-clockwise a circle around them like a whirlwind, dizzy spiral eyes, comedic sweat drops, bright mismatched colors, Shonen anime style, chaotic rotation effect.
+> A clumsy anime character scratching their head in confusion, surrounded by glowing arrows pointing left and right, cards spinning in a circle around them like a whirlwind, dizzy spiral eyes, comedic sweat drops, bright mismatched colors, Shonen anime style, chaotic rotation effect.
 
 ### 18. Revealer (揭示者)
 

@@ -1408,6 +1408,8 @@ function renderTable() {
         };
         instructionBanner.appendChild(voteBtn);
     }
+    
+    // Always append to centerZone (even if reused)
     centerZone.appendChild(instructionBanner);
     
     grid.appendChild(centerZone);
