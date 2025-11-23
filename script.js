@@ -106,6 +106,16 @@ const rolesData = [
         scriptEnd: { 'zh-HK': '狼人請閉眼', 'en-US': 'Werewolves, close your eyes.' }
     },
     { 
+        id: 'dreamwolf', 
+        name: { 'zh-HK': '夢遊狼', 'en-US': 'Dream Wolf' },
+        desc: { 'zh-HK': '你係狼人，但唔會同其他狼人一齊醒來。其他狼人知道你係邊個，但你唔知道佢哋係邊個。', 'en-US': 'You are a Werewolf, but you don\'t wake with other Werewolves. They know who you are, but you don\'t know who they are.' },
+        tips: { 'zh-HK': '小心！你唔知道邊個係你嘅隊友！', 'en-US': 'Be careful! You don\'t know who your teammates are!' },
+        team: 'werewolf',
+        wakeOrder: -1, // Doesn't actually wake up
+        scriptStart: { 'zh-HK': '', 'en-US': '' }, // No separate turn
+        scriptEnd: { 'zh-HK': '', 'en-US': '' }
+    },
+    { 
         id: 'minion', 
         name: { 'zh-HK': '爪牙', 'en-US': 'Minion' },
         desc: { 'zh-HK': '知道邊個係狼人，但狼人唔知你係邊個。', 'en-US': 'Know who the Werewolves are, but they don\'t know you.' },
@@ -136,14 +146,34 @@ const rolesData = [
         scriptEnd: { 'zh-HK': '預言家請閉眼', 'en-US': 'Seer, close your eyes.' }
     },
     { 
+        id: 'apprenticeseer', 
+        name: { 'zh-HK': '學徒預言家', 'en-US': 'Apprentice Seer' },
+        desc: { 'zh-HK': '查看一張中間卡。', 'en-US': 'View one center card.' },
+        tips: { 'zh-HK': '你睇到嘅資訊好有用！', 'en-US': 'The information you see is valuable!' },
+        team: 'village',
+        wakeOrder: 7, duration: 10, 
+        scriptStart: { 'zh-HK': '學徒預言家請擘大眼，睇一張中間嘅牌', 'en-US': 'Apprentice Seer, wake up. You may look at one of the center cards.' },
+        scriptEnd: { 'zh-HK': '學徒預言家請閉眼', 'en-US': 'Apprentice Seer, close your eyes.' }
+    },
+    { 
         id: 'robber', 
         name: { 'zh-HK': '強盜', 'en-US': 'Robber' },
         desc: { 'zh-HK': '交換並查看另一玩家的卡。你變成新角色！', 'en-US': 'Swap and view another player\'s card. You become that role!' },
         tips: { 'zh-HK': '如果你偷到狼人，你就係狼人啦！', 'en-US': 'If you steal a Werewolf, you are now a Werewolf!' },
         team: 'village',
-        wakeOrder: 6, duration: 10, 
+        wakeOrder: 8, duration: 10, 
         scriptStart: { 'zh-HK': '強盜請擘大眼，將自己嘅牌同其他人交換，然後睇下新嘅牌', 'en-US': 'Robber, wake up. You may exchange your card with another player\'s card, and then view your new card.' },
         scriptEnd: { 'zh-HK': '強盜請閉眼', 'en-US': 'Robber, close your eyes.' }
+    },
+    { 
+        id: 'witch', 
+        name: { 'zh-HK': '女巫', 'en-US': 'Witch' },
+        desc: { 'zh-HK': '查看一張中間卡，然後將其與任何玩家交換。', 'en-US': 'View a center card, then swap it with any player.' },
+        tips: { 'zh-HK': '你可以將狼人卡換俾其他人！', 'en-US': 'You can swap a Werewolf card to someone else!' },
+        team: 'village',
+        wakeOrder: 10, duration: 15, 
+        scriptStart: { 'zh-HK': '女巫請擘大眼，睇一張中間嘅牌，然後將佢同任何一個玩家交換', 'en-US': 'Witch, wake up. You may look at one of the center cards and then exchange it with any player\'s card.' },
+        scriptEnd: { 'zh-HK': '女巫請閉眼', 'en-US': 'Witch, close your eyes.' }
     },
     { 
         id: 'troublemaker', 
@@ -151,7 +181,7 @@ const rolesData = [
         desc: { 'zh-HK': '交換兩名玩家的卡，但唔可以睇。', 'en-US': 'Swap two other players\' cards without looking.' },
         tips: { 'zh-HK': '製造混亂，令狼人唔知自己係邊個！', 'en-US': 'Create chaos so Werewolves don\'t know who they are!' },
         team: 'village',
-        wakeOrder: 7, duration: 10, 
+        wakeOrder: 11, duration: 10, 
         scriptStart: { 'zh-HK': '搗蛋鬼請擘大眼，交換兩個人嘅牌', 'en-US': 'Troublemaker, wake up. You may exchange cards between two other players.' },
         scriptEnd: { 'zh-HK': '搗蛋鬼請閉眼', 'en-US': 'Troublemaker, close your eyes.' }
     },
@@ -161,7 +191,7 @@ const rolesData = [
         desc: { 'zh-HK': '將自己嘅卡同中間一張卡交換，但唔可以睇。', 'en-US': 'Swap your card with a center card without looking.' },
         tips: { 'zh-HK': '你唔知自己變成咩，小心講嘢！', 'en-US': 'You don\'t know what you became, be careful!' },
         team: 'village',
-        wakeOrder: 8, duration: 10, 
+        wakeOrder: 12, duration: 10, 
         scriptStart: { 'zh-HK': '酒鬼請擘大眼，將自己嘅牌同中間其中一張牌交換', 'en-US': 'Drunk, wake up and exchange your card with a card from the center.' },
         scriptEnd: { 'zh-HK': '酒鬼請閉眼', 'en-US': 'Drunk, close your eyes.' }
     },
@@ -171,7 +201,7 @@ const rolesData = [
         desc: { 'zh-HK': '最後醒來，查看自己的卡有無變。', 'en-US': 'Wake up last and check if your card changed.' },
         tips: { 'zh-HK': '如果你變咗狼人，記得要幫狼人！', 'en-US': 'If you became a Werewolf, help them!' },
         team: 'village',
-        wakeOrder: 9, duration: 10, 
+        wakeOrder: 13, duration: 10, 
         scriptStart: { 'zh-HK': '失眠者請擘大眼，確認自己嘅身份', 'en-US': 'Insomniac, wake up and look at your card.' },
         scriptEnd: { 'zh-HK': '失眠者請閉眼', 'en-US': 'Insomniac, close your eyes.' }
     },
@@ -327,7 +357,10 @@ const roleImageMap = {
     'troublemaker': 'Troublemaker.png',
     'villager': 'Villager.png',
     'werewolf': 'Wolf.png',
-    'minion': 'minion.png'
+    'dreamwolf': 'DreamWolf.png',
+    'minion': 'minion.png',
+    'apprenticeseer': 'ApprenticeSeer.png',
+    'witch': 'Witch.png'
 };
 
 function renderLibrary() {
@@ -535,7 +568,18 @@ function nextStep() {
         
         instructionText.innerHTML = `${role.name[currentLang]} ${i18n[currentLang].action} <span id="action-timer"></span>`;
         
-        speak(role.scriptStart[currentLang], () => {
+        let scriptToSpeak = role.scriptStart[currentLang];
+        
+        // Dynamic Script for Werewolf if Dream Wolf exists
+        if (role.id === 'werewolf' && deck.includes('dreamwolf')) {
+            const dreamWolfScript = currentLang === 'zh-HK' 
+                ? "夢遊狼請伸出手指公，但唔好擘眼。 " 
+                : "Dream Wolf, stick out your thumb but keep your eyes closed. ";
+            
+            scriptToSpeak = dreamWolfScript + scriptToSpeak;
+        }
+        
+        speak(scriptToSpeak, () => {
             // Start Timer
             startActionTimer(role.duration || 10, () => {
                 // Timer End Callback
@@ -567,11 +611,9 @@ function nextStep() {
                 finishNightStep();
             });
             
-            // Check if role is in play
-            // Note: Doppelganger is always "in play" if assigned, but if it mimics a role, 
-            // that role's turn is separate.
-            // Here we check if the *original* role is assigned to a player.
-            const isRoleInPlay = playerRoles.some(p => p.roleId === role.id);
+            // Check if role is in play (based on INITIAL role)
+            // Players wake up based on their INITIAL card, not what they currently hold.
+            const isRoleInPlay = playerRoles.some(p => p.initialRoleId === role.id);
             
             if (!isRoleInPlay) {
                 console.log(`${role.name['en-US']} is in center. Fake turn.`);
@@ -587,7 +629,7 @@ function nextStep() {
                      // Just wait for timer
                 } else if (role.id === 'werewolf') {
                     // Werewolf logic...
-                    const werewolfCount = playerRoles.filter(p => p.roleId === 'werewolf').length;
+                    const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
                     if (werewolfCount > 1) {
                         renderTable(); // Highlight
                     } else if (werewolfCount === 1) {
@@ -730,8 +772,13 @@ function startActionTimer(duration, onComplete) {
     }, 1000);
 }
 
+let isTransitioning = false;
+
 function finishNightStep() {
     if (!currentNightRole) return;
+    if (isTransitioning) return; // Prevent double calls
+    
+    isTransitioning = true;
     if (actionTimerInterval) clearInterval(actionTimerInterval);
     
     speak(currentNightRole.scriptEnd[currentLang], () => {
@@ -739,6 +786,7 @@ function finishNightStep() {
             // Increment step BEFORE saving to prevent duplicate turns on refresh
             currentStep++;
             saveGameState();
+            isTransitioning = false;
             nextStep();
         }, 2000);
     });
@@ -878,8 +926,12 @@ function handleCardClick(type, index) {
             handleWerewolfAction(type, index);
         } else if (roleId === 'seer') {
             handleSeerAction(type, index);
+        } else if (roleId === 'apprenticeseer') {
+            handleApprenticeSeerAction(type, index);
         } else if (roleId === 'robber') {
             handleRobberAction(type, index);
+        } else if (roleId === 'witch') {
+            handleWitchAction(type, index);
         } else if (roleId === 'troublemaker') {
             handleTroublemakerAction(type, index);
         } else if (roleId === 'drunk') {
@@ -951,7 +1003,7 @@ function handleDoppelgangerAction(type, index) {
 
 function handleWerewolfAction(type, index) {
     // Werewolf: If solo, can peek 1 center. If pack, just confirm.
-    const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.mimickedRole === 'werewolf').length;
+    const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
     
     if (werewolfCount === 1) {
         // Solo werewolf can peek center
@@ -999,7 +1051,9 @@ function handleSeerAction(type, index) {
     // Check completion
     if (type === 'player') {
         // Viewed 1 player -> Done
+        const activeRoleId = currentNightRole.id;
         setTimeout(() => {
+            if (currentNightRole.id !== activeRoleId) return; // Turn changed
             nightActionState.completed = true;
             // If timer already expired, advance immediately
             if (nightActionState.timerExpired) {
@@ -1007,13 +1061,39 @@ function handleSeerAction(type, index) {
             }
         }, 3500); // Wait for flip back + buffer
     } else if (nightActionState.viewed === 2 && nightActionState.selection.every(s => s.type === 'center')) {
+        const activeRoleId = currentNightRole.id;
         setTimeout(() => {
+            if (currentNightRole.id !== activeRoleId) return; // Turn changed
             nightActionState.completed = true;
             if (nightActionState.timerExpired) {
                 finishNightStep();
             }
         }, 3500);
     }
+}
+
+function handleApprenticeSeerAction(type, index) {
+    // Apprentice Seer: View 1 Center Card only
+    if (type !== 'center') return;
+    if (nightActionState.viewed >= 1) return;
+    
+    const card = getCardElement(type, index);
+    if (card) {
+        card.classList.add('revealed');
+        setTimeout(() => card.classList.remove('revealed'), 3000);
+    }
+    
+    nightActionState.viewed++;
+    nightActionState.selection.push({ type, index });
+    
+    const activeRoleId = currentNightRole.id;
+    setTimeout(() => {
+        if (currentNightRole.id !== activeRoleId) return; // Turn changed
+        nightActionState.completed = true;
+        if (nightActionState.timerExpired) {
+            finishNightStep();
+        }
+    }, 3500);
 }
 
 function handleRobberAction(type, index) {
@@ -1060,12 +1140,71 @@ function handleRobberAction(type, index) {
         setTimeout(() => robberCard.classList.remove('revealed'), 3000);
     }
     
+    const activeRoleId = currentNightRole.id;
     setTimeout(() => {
+        if (currentNightRole.id !== activeRoleId) return; // Turn changed
         nightActionState.completed = true;
         if (nightActionState.timerExpired) {
             finishNightStep();
         }
     }, 4500);
+}
+
+function handleWitchAction(type, index) {
+    // Witch: View 1 Center Card, then Swap with ANY Player
+    
+    // Step 1: View Center Card
+    if (!nightActionState.viewedCenter) {
+        if (type !== 'center') return; // Must view center first
+        
+        // Reveal Card
+        const card = getCardElement(type, index);
+        if (card) {
+            card.classList.add('revealed');
+            setTimeout(() => card.classList.remove('revealed'), 3000);
+        }
+        
+        nightActionState.viewedCenter = true;
+        nightActionState.centerIndex = index;
+        nightActionState.selection.push({ type, index });
+        
+        // Update instruction
+        instructionText.innerText = currentLang === 'zh-HK' ? "現在將這張卡與任何玩家交換" : "Now swap this card with any player";
+        return;
+    }
+    
+    // Step 2: Swap with Player
+    if (type === 'player' && !nightActionState.swapped) {
+        const centerIdx = nightActionState.centerIndex;
+        const playerIdx = index;
+        
+        // Swap Data
+        const tempRole = centerCards[centerIdx].roleId;
+        centerCards[centerIdx].roleId = playerRoles[playerIdx].roleId;
+        playerRoles[playerIdx].roleId = tempRole;
+        
+        console.log(`[Witch] Swapped Center ${centerIdx} with Player ${playerIdx}`);
+        saveGameState();
+        logCurrentRoles("After Witch Action");
+        
+        nightActionState.swapped = true;
+        nightActionState.selection.push({ type, index });
+        
+        // Re-render
+        renderTable();
+        
+        // Animate Swap
+        animateSwap(getCardElement('center', centerIdx), getCardElement('player', playerIdx));
+        
+        const activeRoleId = currentNightRole.id;
+        setTimeout(() => {
+            if (currentNightRole.id !== activeRoleId) return; // Turn changed
+            nightActionState.completed = true;
+            if (nightActionState.timerExpired) {
+                finishNightStep();
+            }
+        }, 2000);
+    }
 }
 
 function handleTroublemakerAction(type, index) {
@@ -1107,12 +1246,14 @@ function handleTroublemakerAction(type, index) {
         // Animate
         animateSwap(getCardElement('player', idx1), getCardElement('player', idx2));
         
+        const activeRoleId = currentNightRole.id;
         setTimeout(() => {
+            if (currentNightRole.id !== activeRoleId) return; // Turn changed
             nightActionState.completed = true;
             if (nightActionState.timerExpired) {
                 finishNightStep();
             }
-        }, 3500);
+        }, 2000);
     }
 }
 
@@ -1461,14 +1602,14 @@ function createCard(type, index, label) {
         
         // Werewolf Logic
         if (activeRoleId === 'werewolf' && type === 'player') {
-             if (playerRoles[index].initialRoleId === 'werewolf' || playerRoles[index].mimickedRole === 'werewolf') {
+             if (playerRoles[index].initialRoleId === 'werewolf' || playerRoles[index].initialRoleId === 'dreamwolf' || playerRoles[index].mimickedRole === 'werewolf') {
                  shouldHighlight = true;
              }
         }
         
         // Solo Werewolf: Highlight Center
         if (activeRoleId === 'werewolf' && type === 'center') {
-            const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.mimickedRole === 'werewolf').length;
+            const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
             if (werewolfCount === 1) {
                 shouldHighlight = true;
             }

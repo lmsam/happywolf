@@ -65,7 +65,40 @@
    - **玩家名字**: 加大字體、加粗、置中對齊，防止選錯
    - **中間卡牌**: 隱藏名字標籤，介面更簡潔
    - **Robber Highlighting**: 修正視覺效果，開眼時 highlight 其他玩家，選擇後只有被選中嘅卡有綠邊
-   - **Day Phase UI**: 簡化顯示為「天光！MM:SS」，加入 🗳️ 立即投票按鈕（Desktop + Mobile）
+   - **Day Phase UI**: 簡化顯示為「天光！MM:SS」，加入 ⏰ 立即投票按鈕（Desktop + Mobile，使用 Font Awesome hourglass-end icon）
+8. **新增角色 (Daybreak 擴充)**:
+   - **Dream Wolf (夢遊狼)**: 狼人陣營，但唔會同其他狼人一齊醒來。其他狼人知道佢係邊個，但佢唔知道其他狼人係邊個。
+   - **Apprentice Seer (學徒預言家)**: 村民陣營，可以查看一張中間卡。
+
+- **Witch (女巫)**: 村民陣營，Wake Order 10。可以查看一張中間卡，然後將其與任何玩家交換（包括自己）。
+  - 更新咗所有角色嘅 wake order 以配合新角色
+  - 實現咗 Apprentice Seer 嘅行動邏輯
+  - 更新咗 Werewolf highlighting 邏輯以包括 Dream Wolf
+  - **Dream Wolf 語音**: 動態檢查牌庫，如果有 Dream Wolf，狼人語音會加句提示
+  - **孤狼邏輯**: 修正咗孤狼判定，有 Dream Wolf 時普通狼人唔算孤狼
+
+### 📚 角色行動次序 (Wake Order Reference)
+
+根據官方 One Night Ultimate Werewolf Daybreak 規則：
+
+1. **Doppelgänger (化身幽靈)**
+2. **Sentinel** ← Daybreak 新角色（未實現）
+3. **Werewolves (狼人)** - 包括 Alpha Wolf, Mystic Wolf, Dream Wolf
+4. **Minion (爪牙)**
+5. **Masons (守夜人)**
+6. **Seer (預言家)**
+7. **Apprentice Seer (學徒預言家)** ← Daybreak 新角色 ✅ 已實現
+8. **Paranormal Investigator (偵探)** ← Daybreak 新角色（未實現）
+9. **Robber (強盜)**
+10. **Witch (女巫)** ← Daybreak 新角色 ✅ 已實現
+11. **Troublemaker (搗蛋鬼)**
+12. **Village Idiot** ← Daybreak 新角色（未實現）
+13. **Drunk (酒鬼)**
+14. **Insomniac (失眠者)**
+15. **Revealer** ← Daybreak 新角色（未實現）
+16. **Curator** ← Daybreak 新角色（未實現）
+
+**備註**: Dream Wolf 唔會單獨醒來（wake order = -1），佢會喺 Werewolf turn 時被其他狼人見到。
 
 ### ⚠️ 遇到問題 (Issues Encountered)
 
@@ -82,24 +115,27 @@
 
 ### 🔄 進行中 (In Progress)
 
-- [ ] 測試 Desktop 流程 (Setup → Desktop Game → End)
-- [ ] 測試 Mobile 流程 (Setup → Mobile Game → End)
+- [ ] 實現其他 Daybreak 角色（Paranormal Investigator 等）
 
 ### 📋 待辦事項 (TODO)
 
-1. 完成三頁架構重構
-2. 測試 Desktop 流程 (Setup → Desktop Game → End)
-3. 測試 Mobile 流程 (Setup → Mobile Game → End)
-4. 測試跨頁面的 State 持久化
-5. 優化 Mobile UI (卡牌大小、間距、觸控區域)
+1. ~~完成三頁架構重構~~ ✅
+2. ~~測試 Desktop 流程~~ ✅
+3. ~~測試 Mobile 流程~~ ✅
+4. ~~測試跨頁面的 State 持久化~~ ✅
+5. ~~優化 Mobile UI~~ ✅
+6. ~~完成 Dream Wolf 語音提示~~ ✅
+7. ~~實現 Witch (女巫)~~ ✅
+8. 實現其他 Daybreak 角色（Paranormal Investigator 等）
 
 ## 備註 (Notes)
 
 - 所有 Game Logic (Night Phase, Day Phase, Voting 等) 保持不變
 - Desktop 和 Mobile 只是 UI/Layout 不同，邏輯完全共用
 - `localStorage` key: `happywolf_save`
+- 新增角色圖片：`DreamWolf.png`, `ApprenticeSeer.png`, `Witch.png`
 
 ---
 
-**最後更新**: 2025-11-23 02:33
-**狀態**: 🔄 重構中 (Refactoring in Progress)
+**最後更新**: 2025-11-23 13:25
+**狀態**: ✅ 角色實現完成 (Roles Implemented)
