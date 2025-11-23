@@ -437,54 +437,14 @@ function closeModal() {
 
 // --- Peek Phase ---
 function startPeekPhase() {
-    // Shuffle Deck
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-    // Assign Roles
-    playerRoles = players.map((p, i) => ({
-        playerId: p.id,
-        roleId: deck[i],
-        initialRoleId: deck[i], // Track initial role for Insomniac
-        revealed: false
-    }));
+    // Data is already prepared and saved in initSetup
     
-    centerCards = deck.slice(players.length).map(roleId => ({
-        roleId: roleId,
-        revealed: false
-    }));
-    
-    // Debug Log: Initial Roles
-    logCurrentRoles("Initial Roles");
-    
-    // Force Werewolf Logic: Ensure at least 1 Werewolf is in play if available
-    const playerHasWerewolf = playerRoles.some(p => p.roleId === 'werewolf');
-    if (!playerHasWerewolf) {
-        const centerWerewolfIndex = centerCards.findIndex(c => c.roleId === 'werewolf');
-        
-        if (centerWerewolfIndex !== -1) {
-            // Found a werewolf in center, swap with a random player
-            const randomPlayerIndex = Math.floor(Math.random() * players.length);
-            
-            console.log(`Force Werewolf: Swapping Player ${randomPlayerIndex} (${playerRoles[randomPlayerIndex].roleId}) with Center ${centerWerewolfIndex} (werewolf)`);
-            
-            const temp = playerRoles[randomPlayerIndex].roleId;
-            playerRoles[randomPlayerIndex].roleId = centerCards[centerWerewolfIndex].roleId;
-            centerCards[centerWerewolfIndex].roleId = temp;
-            
-            // Update initialRoleId too? NO. Force Werewolf happens BEFORE game starts (effectively).
-            // So the player "receives" the Werewolf card.
-            playerRoles[randomPlayerIndex].initialRoleId = playerRoles[randomPlayerIndex].roleId;
-        }
-    }
-
     setupPhase.classList.add('hidden');
     gamePhase.classList.remove('hidden');
     readyBtn.classList.add('hidden');
     
     gamePhaseState = 'PEEK';
-    currentPeekIndex = 0;
+    // currentPeekIndex = 0; // Already set in state
     
     renderTable();
     updatePeekState();
@@ -579,6 +539,31 @@ function nextStep() {
             // Start Timer
             startActionTimer(role.duration || 10, () => {
                 // Timer End Callback
+                nightActionState.timerExpired = true; // Mark timer as expired
+                
+                // Check if action was completed (set by action handlers)
+                if (nightActionState.completed) {
+                    finishNightStep();
+                    return;
+                }
+                
+                // Check if role requires interaction
+                const interactiveRoles = ['seer', 'robber', 'troublemaker', 'drunk', 'doppelganger'];
+                const roleId = currentNightRole.mimicId || currentNightRole.id;
+                
+                if (interactiveRoles.includes(roleId)) {
+                    // Check if action was performed
+                    const actionPerformed = nightActionState.viewed > 0 || nightActionState.swapped || nightActionState.selection.length > 0;
+                    
+                    if (!actionPerformed && !currentNightRole.isFake) {
+                        // No action performed, don't auto-advance
+                        console.log(`${role.name['en-US']}: Timer expired but no action performed. Waiting for player input.`);
+                        instructionText.innerHTML = `${role.name[currentLang]} - ${currentLang === 'zh-HK' ? '請完成行動' : 'Please complete your action'}`;
+                        return; // Don't call finishNightStep
+                    }
+                }
+                
+                // Auto-advance for non-interactive roles or if action was performed
                 finishNightStep();
             });
             
@@ -605,6 +590,10 @@ function nextStep() {
                     const werewolfCount = playerRoles.filter(p => p.roleId === 'werewolf').length;
                     if (werewolfCount > 1) {
                         renderTable(); // Highlight
+                    } else if (werewolfCount === 1) {
+                        // Lone Wolf: Highlight Center Cards
+                        const centerCardsEls = document.querySelectorAll('.table-card[data-type="center"]');
+                        centerCardsEls.forEach(el => el.classList.add('highlight'));
                     }
                 }
             }
@@ -621,7 +610,8 @@ function nextStep() {
 let dayTimerInterval;
 
 function startDayPhase(resume = false) {
-    const durationMin = parseInt(document.getElementById('day-duration').value);
+    const dayDurationEl = document.getElementById('day-duration');
+    const durationMin = dayDurationEl ? parseInt(dayDurationEl.value) : parseInt(window.savedDayDuration || '5');
     let timeLeft;
     
     if (resume && window.dayEndTime) {
@@ -679,7 +669,7 @@ function updateTimerDisplay(seconds) {
     const timeStr = `${m}:${s}`;
     
     const instruction = document.getElementById('instruction-text');
-    instruction.innerText = `${currentLang === 'zh-HK' ? "天光！討論時間" : "Day Phase"}: ${timeStr}`;
+    instruction.innerHTML = `${currentLang === 'zh-HK' ? "天光！" : "Day Phase"} ${timeStr}`;
 }
 
 function startVotingPhase() {
@@ -744,11 +734,11 @@ function finishNightStep() {
     if (!currentNightRole) return;
     if (actionTimerInterval) clearInterval(actionTimerInterval);
     
-    saveGameState();
-    
     speak(currentNightRole.scriptEnd[currentLang], () => {
         setTimeout(() => {
+            // Increment step BEFORE saving to prevent duplicate turns on refresh
             currentStep++;
+            saveGameState();
             nextStep();
         }, 2000);
     });
@@ -775,7 +765,8 @@ function speak(text, callback, force = false) {
     currentUtterance = utterance; // Keep reference
     
     utterance.lang = currentLang;
-    utterance.volume = document.getElementById('volume-control').value;
+    const volEl = document.getElementById('volume-control');
+    utterance.volume = volEl ? volEl.value : (window.savedVolume || 1);
     utterance.rate = 0.9;
     
     let callbackCalled = false;
@@ -791,6 +782,11 @@ function speak(text, callback, force = false) {
     
     utterance.onend = done;
     utterance.onerror = (e) => {
+        if (e.error === 'interrupted') {
+            // This happens when synth.cancel() is called. 
+            // We DO NOT want to trigger done() here, because we are likely starting a new speech.
+            return;
+        }
         console.error("Speech Error:", e);
         // If error occurs, try to resume and retry? No, just proceed to prevent hang.
         if (synth.paused) synth.resume();
@@ -799,8 +795,8 @@ function speak(text, callback, force = false) {
     
     synth.speak(utterance);
     
-    // Fallback: If speech doesn't end within reasonable time (e.g. text length * 200ms + 1s), force callback
-    const estimatedDuration = (text.length * 200) + 1000;
+    // Fallback: If speech doesn't end within reasonable time (e.g. text length * 300ms + 2s), force callback
+    const estimatedDuration = (text.length * 300) + 2000;
     setTimeout(done, estimatedDuration);
 }
 
@@ -1003,9 +999,20 @@ function handleSeerAction(type, index) {
     // Check completion
     if (type === 'player') {
         // Viewed 1 player -> Done
-        setTimeout(finishNightStep, 3500); // Wait for flip back + buffer
+        setTimeout(() => {
+            nightActionState.completed = true;
+            // If timer already expired, advance immediately
+            if (nightActionState.timerExpired) {
+                finishNightStep();
+            }
+        }, 3500); // Wait for flip back + buffer
     } else if (nightActionState.viewed === 2 && nightActionState.selection.every(s => s.type === 'center')) {
-        setTimeout(finishNightStep, 3500);
+        setTimeout(() => {
+            nightActionState.completed = true;
+            if (nightActionState.timerExpired) {
+                finishNightStep();
+            }
+        }, 3500);
     }
 }
 
@@ -1037,10 +1044,11 @@ function handleRobberAction(type, index) {
     saveGameState();
     logCurrentRoles("After Robber Action");
     
-    // Re-render to update card content (images/text) to reflect swap
-    renderTable();
-    
     nightActionState.swapped = true;
+    nightActionState.selection = [{ type: 'player', index }]; // Track selected card
+    
+    // Re-render to update card content (images/text) and highlighting
+    renderTable();
     
     // Animate Swap
     animateSwap(getCardElement('player', robberIdx), getCardElement('player', index));
@@ -1052,7 +1060,12 @@ function handleRobberAction(type, index) {
         setTimeout(() => robberCard.classList.remove('revealed'), 3000);
     }
     
-    setTimeout(finishNightStep, 4500);
+    setTimeout(() => {
+        nightActionState.completed = true;
+        if (nightActionState.timerExpired) {
+            finishNightStep();
+        }
+    }, 4500);
 }
 
 function handleTroublemakerAction(type, index) {
@@ -1094,7 +1107,12 @@ function handleTroublemakerAction(type, index) {
         // Animate
         animateSwap(getCardElement('player', idx1), getCardElement('player', idx2));
         
-        setTimeout(finishNightStep, 3500);
+        setTimeout(() => {
+            nightActionState.completed = true;
+            if (nightActionState.timerExpired) {
+                finishNightStep();
+            }
+        }, 3500);
     }
 }
 
@@ -1121,7 +1139,12 @@ function handleDrunkAction(type, index) {
     
     nightActionState.swapped = true;
     saveGameState();
-    setTimeout(finishNightStep, 1000);
+    setTimeout(() => {
+        nightActionState.completed = true;
+        if (nightActionState.timerExpired) {
+            finishNightStep();
+        }
+    }, 1000);
 }
 
 function handleInsomniacAction(type, index) {
@@ -1155,13 +1178,23 @@ function handleInsomniacAction(type, index) {
     
     // Finish if all Insomniacs have acted
     if (nightActionState.viewed >= totalInsomniacs) {
-        setTimeout(finishNightStep, 3500);
+        setTimeout(() => {
+            nightActionState.completed = true;
+            if (nightActionState.timerExpired) {
+                finishNightStep();
+            }
+        }, 3500);
     }
 }
 
 
 // --- Render Table (Grid Layout) ---
 function renderTable() {
+    if (window.location.pathname.endsWith('mobile.html')) {
+        renderMobileTable();
+        return;
+    }
+
     tableContainer.innerHTML = '';
     
     const grid = document.createElement('div');
@@ -1220,12 +1253,13 @@ function renderTable() {
         instructionText.innerText = i18n[currentLang].ready; // Default text
         instructionBanner.appendChild(instructionText);
         
-        // Add Manual Vote Button
-        const voteBtn = document.createElement('button');
+        // Add Manual Vote Button (Icon)
+        const voteBtn = document.createElement('i');
         voteBtn.id = 'manual-vote-btn';
-        voteBtn.className = 'comic-btn small hidden'; // Hidden by default
-        voteBtn.innerText = currentLang === 'zh-HK' ? "開始投票" : "Vote Now";
-        voteBtn.style.marginLeft = '10px';
+        voteBtn.className = 'fa fa-hourglass-end hidden';
+        voteBtn.setAttribute('aria-hidden', 'true');
+        voteBtn.style.cssText = 'margin-left: 15px; font-size: 1.8rem; color: #FFD700; cursor: pointer; text-shadow: 2px 2px 0 #000;';
+        voteBtn.title = currentLang === 'zh-HK' ? '立即投票' : 'Vote Now';
         voteBtn.onclick = () => {
             console.log("Manual Vote Button Clicked");
             clearInterval(dayTimerInterval);
@@ -1249,6 +1283,31 @@ function renderTable() {
     });
     
     tableContainer.appendChild(grid);
+}
+
+function renderMobileTable() {
+    tableContainer.innerHTML = '';
+    
+    // Ensure instructionText reference is correct
+    instructionText = document.getElementById('instruction-text');
+    
+    // 1. Center Cards Row
+    const centerRow = document.createElement('div');
+    centerRow.className = 'mobile-center-row';
+    centerCards.forEach((c, i) => {
+        const card = createCard('center', i, `Center ${i+1}`);
+        centerRow.appendChild(card);
+    });
+    tableContainer.appendChild(centerRow);
+    
+    // 2. Players Grid
+    const playersGrid = document.createElement('div');
+    playersGrid.className = 'mobile-players-grid';
+    players.forEach((p, i) => {
+        const card = createCard('player', i, p.name);
+        playersGrid.appendChild(card);
+    });
+    tableContainer.appendChild(playersGrid);
 }
 
 // Helper: Get Smart Seating Indices based on player count
@@ -1372,6 +1431,10 @@ function createCard(type, index, label) {
     const labelDiv = document.createElement('div');
     labelDiv.className = 'card-label';
     labelDiv.innerText = label;
+    // Hide labels for center cards
+    if (type === 'center') {
+        labelDiv.style.display = 'none';
+    }
     card.appendChild(labelDiv);
     
     // --- Highlight Logic ---
@@ -1426,14 +1489,22 @@ function createCard(type, index, label) {
             if (index !== activePlayerIndex) {
                 const isSelected = nightActionState.selection && nightActionState.selection.some(s => s.type === type && s.index === index);
                 
-                // Check if selection is full (for Troublemaker)
-                const isSelectionFull = activeRoleId === 'troublemaker' && nightActionState.selection && nightActionState.selection.length >= 2;
-                
-                if (isSelected) {
-                    card.classList.add('selected');
-                } else if (!isSelectionFull) {
-                    // Only highlight others if selection is NOT full
-                    shouldHighlight = true;
+                // For Robber: if swapped, only show selected card as green
+                if (activeRoleId === 'robber' && nightActionState.swapped) {
+                    if (isSelected) {
+                        card.classList.add('selected'); // Green border
+                    }
+                    // Don't highlight others after swap
+                } else {
+                    // Before swap (or Troublemaker logic)
+                    const isSelectionFull = activeRoleId === 'troublemaker' && nightActionState.selection && nightActionState.selection.length >= 2;
+                    
+                    if (isSelected) {
+                        card.classList.add('selected');
+                    } else if (!isSelectionFull) {
+                        // Only highlight others if selection is NOT full
+                        shouldHighlight = true;
+                    }
                 }
             }
         }
@@ -1465,11 +1536,9 @@ function createCard(type, index, label) {
 function stopGame() {
     isPlaying = false;
     synth.cancel();
-    gamePhase.classList.add('hidden');
-    setupPhase.classList.remove('hidden');
-    deck = [];
-    updateDeckUI();
+    
     clearGameState(); // Clear save on exit
+    window.location.href = 'index.html';
 }
 
 // --- Auto Test ---
@@ -1544,6 +1613,7 @@ function simulateNight() {
 
 // --- Persistence ---
 function saveGameState() {
+    const dayDurationEl = document.getElementById('day-duration');
     const state = {
         players,
         deck,
@@ -1554,7 +1624,8 @@ function saveGameState() {
         nightActionState,
         currentPeekIndex,
         currentLang,
-        dayDuration: document.getElementById('day-duration').value,
+        dayDuration: dayDurationEl ? dayDurationEl.value : (window.savedDayDuration || '5'),
+        volume: document.getElementById('volume-control') ? document.getElementById('volume-control').value : (window.savedVolume || 1),
         dayEndTime: window.dayEndTime || null
     };
     localStorage.setItem('happywolf_save', JSON.stringify(state));
@@ -1577,7 +1648,25 @@ function loadGameState() {
         nightActionState = state.nightActionState;
         currentPeekIndex = state.currentPeekIndex;
         currentLang = state.currentLang;
-        document.getElementById('day-duration').value = state.dayDuration;
+        
+        // Restore Day Duration safely
+        if (state.dayDuration) {
+            window.savedDayDuration = state.dayDuration; // Store in memory for mobile/desktop
+            const dayDurationEl = document.getElementById('day-duration');
+            if (dayDurationEl) {
+                dayDurationEl.value = state.dayDuration;
+            }
+        }
+        
+        // Restore Volume safely
+        if (state.volume !== undefined) {
+            window.savedVolume = state.volume;
+            const volEl = document.getElementById('volume-control');
+            if (volEl) {
+                volEl.value = state.volume;
+            }
+        }
+        
         window.dayEndTime = state.dayEndTime;
         
         // Restore UI
@@ -1619,15 +1708,41 @@ function clearGameState() {
 }
 
 function init() {
+    // Define unlockHandler first
+    const unlockHandler = () => {
+        unlockAudio();
+        document.body.removeEventListener('click', unlockHandler);
+        document.body.removeEventListener('touchend', unlockHandler);
+        document.body.removeEventListener('keydown', unlockHandler);
+    };
+    window.unlockHandler = unlockHandler; // Expose globally
+
+    // Route based on page
+    if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
+        initSetup();
+    } else if (window.location.pathname.endsWith('mobile.html') || window.location.pathname.endsWith('desktop.html')) {
+        initGame();
+    } else {
+        // Fallback for dev environment or other paths
+        if (document.getElementById('setup-phase') && !document.getElementById('setup-phase').classList.contains('hidden')) {
+            initSetup();
+        } else {
+            initGame();
+        }
+    }
+}
+
+function initSetup() {
+    console.log("Initializing Setup Phase...");
     renderLibrary();
     updateDeckUI();
-    // Bind Buttons
+    
+    // Bind Setup Buttons
     document.getElementById('add-player-btn').addEventListener('click', () => {
         addPlayer(`Player ${players.length + 1}`);
     });
     
     document.getElementById('random-seat-btn').addEventListener('click', () => {
-        // Simple shuffle
         players.sort(() => Math.random() - 0.5);
         renderPlayerList();
     });
@@ -1639,20 +1754,115 @@ function init() {
         speak(currentLang === 'zh-HK' ? "天黑請閉眼" : "Everyone, close your eyes", null, true);
     });
     
-    confirmDeckBtn.addEventListener('click', () => {
-        unlockAudio();
-        startPeekPhase();
+    // Modal Listeners for Setup Phase (Library Info)
+    closeModalBtn.addEventListener('click', () => {
+        closeModal();
     });
     
-    // Menu Listeners
+    window.addEventListener('click', (e) => {
+        if (e.target === roleModal) {
+            closeModal();
+        }
+    });
+    
+    confirmDeckBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent form submission if any
+        unlockAudio();
+        
+        // Prepare Game Data
+        // Shuffle Deck
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        
+        // Assign Roles
+        playerRoles = players.map((p, i) => ({
+            playerId: p.id,
+            roleId: deck[i],
+            initialRoleId: deck[i],
+            revealed: false
+        }));
+        
+        centerCards = deck.slice(players.length).map(roleId => ({
+            roleId: roleId,
+            revealed: false
+        }));
+        
+        // Force Werewolf Logic
+        const werewolfCount = playerRoles.filter(p => p.roleId === 'werewolf').length;
+        if (werewolfCount === 0) {
+            const centerWerewolfIndex = centerCards.findIndex(c => c.roleId === 'werewolf');
+            if (centerWerewolfIndex !== -1) {
+                const randomPlayerIndex = Math.floor(Math.random() * players.length);
+                const temp = playerRoles[randomPlayerIndex].roleId;
+                playerRoles[randomPlayerIndex].roleId = centerCards[centerWerewolfIndex].roleId;
+                centerCards[centerWerewolfIndex].roleId = temp;
+                playerRoles[randomPlayerIndex].initialRoleId = playerRoles[randomPlayerIndex].roleId;
+                console.log(`Force Werewolf: Swapped Player ${randomPlayerIndex} with Center ${centerWerewolfIndex}`);
+            }
+        }
+
+        // Set Initial Game State
+        gamePhaseState = 'PEEK';
+        currentPeekIndex = 0;
+        
+        // Save State
+        saveGameState();
+        
+        // Redirect
+        const mode = document.getElementById('interface-mode').value;
+        if (mode === 'mobile') {
+            window.location.href = 'mobile.html';
+        } else {
+            window.location.href = 'desktop.html';
+        }
+    });
+
+    // Smart Default for Interface Mode
+    const interfaceMode = document.getElementById('interface-mode');
+    if (interfaceMode && window.innerWidth < 768) {
+        interfaceMode.value = 'mobile';
+    }
+    
+    // Unlock Audio on interaction
+    document.body.addEventListener('click', window.unlockHandler);
+    document.body.addEventListener('touchend', window.unlockHandler);
+    document.body.addEventListener('keydown', window.unlockHandler);
+    
+    // Load previous setup if available? (Optional, maybe later)
+    // For now, default players
+    addPlayer("Player 1");
+    addPlayer("Player 2");
+    addPlayer("Player 3");
+}
+
+function initGame() {
+    console.log("Initializing Game Phase...");
+    setupPhase.classList.add('hidden');
+    gamePhase.classList.remove('hidden');
+    
+    // Initialize Game UI Elements
+    instructionBanner = document.getElementById('instruction-banner');
+    instructionText = document.getElementById('instruction-text');
+    
+    // Load State
+    if (!loadGameState()) {
+        console.warn("No game state found, redirecting to setup.");
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Debug: Log initial roles for testing
+    logCurrentRoles("Initial Game State");
+    
+    // Bind Game Buttons
     menuBtn.addEventListener('click', () => {
         pauseMenu.classList.remove('hidden');
     });
-    
     resumeBtn.addEventListener('click', () => {
         pauseMenu.classList.add('hidden');
     });
-    
     endGameBtn.addEventListener('click', () => {
         pauseMenu.classList.add('hidden');
         stopGame();
@@ -1663,49 +1873,42 @@ function init() {
         startNightPhase();
     });
     
+    // Bind Manual Vote Button (for both desktop and mobile)
+    const manualVoteBtn = document.getElementById('manual-vote-btn');
+    if (manualVoteBtn) {
+        manualVoteBtn.addEventListener('click', () => {
+            console.log("Manual Vote Button Clicked");
+            clearInterval(dayTimerInterval);
+            startVotingPhase();
+        });
+    }
+    
     closeModalBtn.addEventListener('click', () => {
         closeModal();
-        // If in Peek Phase, closing modal means "Done Peeking"
-        if (gamePhaseState === 'PEEK') {
-            completePeek();
-        }
+        if (gamePhaseState === 'PEEK') completePeek();
     });
     
-    // Global click for modal outside
     window.addEventListener('click', (e) => {
         if (e.target === roleModal) {
             closeModal();
             if (gamePhaseState === 'PEEK') completePeek();
         }
     });
-
-    // Unlock Audio on first interaction (iOS Fix)
-    // Note: Use touchend/click, as touchstart is often not trusted for AudioContext
-    const unlockHandler = () => {
-        unlockAudio();
-        document.body.removeEventListener('click', unlockHandler);
-        document.body.removeEventListener('touchend', unlockHandler);
-        document.body.removeEventListener('keydown', unlockHandler);
-    };
-    document.body.addEventListener('click', unlockHandler);
-    document.body.addEventListener('touchend', unlockHandler);
-    document.body.addEventListener('keydown', unlockHandler);
+    
+    // Unlock Audio
+    document.body.addEventListener('click', window.unlockHandler);
+    document.body.addEventListener('touchend', window.unlockHandler);
+    document.body.addEventListener('keydown', window.unlockHandler);
     
     // Handle Resize
     window.addEventListener('resize', () => {
-        if (!gamePhase.classList.contains('hidden')) {
-            renderTable();
-        }
+        renderTable();
     });
-
-    // Try to load save
-    if (loadGameState()) {
-        console.log("Game restored from save.");
-    } else {
-        // Default: 3 Players
-        addPlayer("Player 1");
-        addPlayer("Player 2");
-        addPlayer("Player 3");
+    
+    // Initial Render
+    renderTable();
+    if (gamePhaseState === 'PEEK') {
+        updatePeekState();
     }
 }
 function logCurrentRoles(label = "Current Roles") {
