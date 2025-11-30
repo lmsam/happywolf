@@ -74,3 +74,64 @@ describe('UI Rendering', () => {
         // but checking the class is sufficient for logic verification.
     });
 });
+
+describe('Token Visibility on Card Back vs Front', () => {
+    beforeEach(() => {
+        setPlayerRoles([
+            { id: 1, roleId: 'pi', roles: { actual: 'pi' }, initialRoleId: 'pi', tokens: [], interactionState: {} }
+        ]);
+    });
+
+    test('P.I. transformation token should NOT show on card back (unrevealed card)', () => {
+        // Add P.I. transformation token
+        addToken({ type: 'player', index: 0 }, 'pi-transformed-werewolf');
+        
+        // Create card element (unrevealed state)
+        const card = createCard('player', 0, 'Player 1');
+        
+        // Token container should exist but have hidden-on-back class or similar
+        const container = card.querySelector('.token-container');
+        
+        // For unrevealed cards, transformation tokens should be hidden
+        // Either the container doesn't exist, or the specific token is hidden
+        if (container) {
+            const piToken = container.querySelector('.token.pi-transformed-werewolf');
+            // P.I. token should either not exist or have hidden class
+            // Actually, the solution should be: token container should be on card-face-back
+            // so it only shows when card is flipped
+            expect(container.closest('.card-face-back')).not.toBeNull();
+        }
+    });
+    
+    test('P.I. transformation token should show on card front (revealed card)', () => {
+        addToken({ type: 'player', index: 0 }, 'pi-transformed-werewolf');
+        
+        const card = createCard('player', 0, 'Player 1');
+        
+        // After card is revealed (flipped), tokens on card-face-back become visible
+        // The token container should be placed on the back face
+        const faceBack = card.querySelector('.card-face-back');
+        const container = faceBack.querySelector('.token-container');
+        
+        expect(container).not.toBeNull();
+        
+        const piToken = container.querySelector('.token.pi-transformed-werewolf');
+        expect(piToken).not.toBeNull();
+    });
+    
+    test('Shield token should still show on card back (visible before reveal)', () => {
+        // Shield is a special case - it should be visible even on unrevealed cards
+        // because players need to know a card is protected
+        addToken({ type: 'player', index: 0 }, 'shield');
+        
+        const card = createCard('player', 0, 'Player 1');
+        
+        // Shield should be on the front face (card back design)
+        const faceFront = card.querySelector('.card-face-front');
+        const container = faceFront.querySelector('.token-container');
+        
+        expect(container).not.toBeNull();
+        const shieldToken = container.querySelector('.token.shield');
+        expect(shieldToken).not.toBeNull();
+    });
+});

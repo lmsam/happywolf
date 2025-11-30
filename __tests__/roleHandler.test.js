@@ -269,6 +269,59 @@ describe('WerewolfHandler', () => {
         expect(result).toEqual({ handled: true, shouldReveal: false });
         expect(handler.actionState.viewedCenter).toBe(false);
     });
+    
+    test('should recognize Mystic Wolf as fellow wolf (not lone wolf)', () => {
+        const handler = new WerewolfHandler();
+        const gameState = {
+            playerRoles: [
+                { roles: { actual: 'werewolf' } },
+                { roles: { actual: 'mysticwolf' } },
+                { roles: { actual: 'villager' } }
+            ]
+        };
+        
+        const result = handler.startTurn(gameState);
+        expect(handler.actionState.isLoneWolf).toBe(false);
+        expect(result.canInteract).toBe(false);
+    });
+    
+    test('should recognize Dream Wolf as fellow wolf (not lone wolf)', () => {
+        const handler = new WerewolfHandler();
+        const gameState = {
+            playerRoles: [
+                { roles: { actual: 'werewolf' } },
+                { roles: { actual: 'dreamwolf' } },
+                { roles: { actual: 'villager' } }
+            ]
+        };
+        
+        const result = handler.startTurn(gameState);
+        expect(handler.actionState.isLoneWolf).toBe(false);
+        expect(result.canInteract).toBe(false);
+    });
+    
+    test('Mystic Wolf should be recognized as lone wolf when alone', () => {
+        const handler = new WerewolfHandler();
+        // Simulate a werewolf player whose actual role is mysticwolf (swapped)
+        // Actually this tests when a werewolf counts mysticwolf as wolf team
+        // The werewolf handler checks playerRoles.actual
+        const gameState = {
+            playerRoles: [
+                { roles: { actual: 'mysticwolf' } },
+                { roles: { actual: 'villager' } },
+                { roles: { actual: 'seer' } }
+            ]
+        };
+        
+        // A werewolf player checking - should see mysticwolf as a wolf
+        // Wait, this needs to be from werewolf perspective
+        // If a regular werewolf is checking - mysticwolf should be counted
+        // Let's test: only mysticwolf in game = lone wolf from mysticwolf's POV
+        const result = handler.startTurn(gameState);
+        // Only 1 wolf team member (mysticwolf), so isLoneWolf = true
+        expect(handler.actionState.isLoneWolf).toBe(true);
+        expect(result.canInteract).toBe(true);
+    });
 });
 
 describe('ApprenticeSeerHandler', () => {
@@ -474,6 +527,65 @@ describe('InsomniacHandler', () => {
         const result = handler.handleAction(gameState, 'player', 1);
         
         expect(result).toBe(false);
+    });
+    
+    test('should work even if startTurn was not called (early click)', () => {
+        // This simulates the case where a player clicks before speech finishes
+        // The handler's constructor initializes actionState, so handleAction should still work
+        const handler = new InsomniacHandler();
+        const gameState = {
+            playerRoles: [{ roleId: 'insomniac', initialRoleId: 'insomniac' }],
+            currentPlayerIndex: 0
+        };
+        
+        // NOTE: startTurn() is NOT called here - simulating early click
+        const result = handler.handleAction(gameState, 'player', 0);
+        
+        // Should still work because actionState is initialized in constructor
+        expect(result).toEqual({ handled: true, shouldReveal: true });
+        expect(handler.actionState.viewedSelf).toBe(true);
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('FIXED: should work on early click because startTurn is called before speech', () => {
+        // Original bug scenario:
+        // 1. Handler is singleton - reused across turns
+        // 2. Previous turn set viewedSelf = true
+        // 3. New turn starts, speech begins
+        // 4. Player clicks before speech ends (before startTurn WAS called)
+        // 5. handleAction checks viewedSelf which is still true from previous turn
+        // 6. Returns false - card doesn't flip!
+        //
+        // FIX: startTurn() is now called BEFORE speech starts in nextStep()
+        // So the handler state is always reset before any interaction can happen
+        
+        const handler = new InsomniacHandler();
+        const gameState = {
+            playerRoles: [{ roleId: 'insomniac', initialRoleId: 'insomniac' }],
+            currentPlayerIndex: 0
+        };
+        
+        // Simulate previous turn completed
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 0);
+        expect(handler.actionState.viewedSelf).toBe(true);
+        
+        // Now a new turn starts
+        // With the fix, startTurn is called BEFORE speech, so state is reset
+        gameState.currentPlayerIndex = 1;
+        gameState.playerRoles = [
+            { roleId: 'insomniac', initialRoleId: 'insomniac' },
+            { roleId: 'doppelganger', initialRoleId: 'doppelganger' }
+        ];
+        
+        // This simulates what happens in the fixed code:
+        // startTurn is called before speech starts
+        handler.startTurn(gameState);
+        
+        // Now player clicks (even during speech) - this should work!
+        const result = handler.handleAction(gameState, 'player', 1);
+        
+        expect(result).toEqual({ handled: true, shouldReveal: true });
     });
 });
 

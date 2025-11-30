@@ -679,8 +679,51 @@ function nextStep() {
             scriptToSpeak = dreamWolfScript + scriptToSpeak;
         }
         
+        // Check if role is in play (based on INITIAL role) BEFORE speech
+        // Players wake up based on their INITIAL card, not what they currently hold.
+        const isRoleInPlay = playerRoles.some(p => p.initialRoleId === role.id);
+        
+        if (!isRoleInPlay) {
+            console.log(`${role.name['en-US']} is in center. Fake turn.`);
+            currentNightRole.isFake = true;
+        } else {
+            // Real turn - Initialize handler BEFORE speech starts
+            // This allows players to interact even while speech is playing
+            const handler = getRoleHandler(role.id);
+            
+            if (handler) {
+                const gameState = {
+                    playerRoles: playerRoles,
+                    centerCards: centerCards,
+                    currentPlayerIndex: playerRoles.findIndex(p => p.initialRoleId === role.id)
+                };
+                
+                // IMPORTANT: Call startTurn BEFORE speech to reset handler state
+                // This fixes the bug where early clicks fail because the handler
+                // still has state from a previous turn
+                const turnInfo = handler.startTurn(gameState);
+                console.log(`[Handler] ${role.id} turn started:`, turnInfo);
+                
+                // Handler might update instruction message
+                if (turnInfo.message) {
+                    instructionText.innerHTML = `${role.name[currentLang]} - ${turnInfo.message} <span id="action-timer"></span>`;
+                }
+                
+                // Check if turn is already complete (e.g., role is shielded and cannot act)
+                if (handler.isTurnComplete(gameState)) {
+                    console.log(`[Handler] ${role.id} turn auto-completed (shielded or no action needed)`);
+                    nightActionState.completed = true;
+                }
+                
+                // Render table to apply any highlights/states
+                renderTable();
+            } else {
+                console.warn(`No handler found for role ${role.id}`);
+            }
+        }
+        
         speak(scriptToSpeak, () => {
-            // Start Timer
+            // Start Timer after speech ends
             startActionTimer(role.duration || 10, () => {
                 // Timer End Callback
                 nightActionState.timerExpired = true; // Mark timer as expired
@@ -710,52 +753,6 @@ function nextStep() {
                 // Auto-advance for non-interactive roles or if action was performed
                 finishNightStep();
             });
-            
-            // Check if role is in play (based on INITIAL role)
-            // Players wake up based on their INITIAL card, not what they currently hold.
-            const isRoleInPlay = playerRoles.some(p => p.initialRoleId === role.id);
-            
-            if (!isRoleInPlay) {
-                console.log(`${role.name['en-US']} is in center. Fake turn.`);
-                // Disable interaction (handled by checks in handleCardClick)
-                // But we need to ensure handleCardClick knows it's a fake turn?
-                // Actually, handleCardClick checks `currentNightRole`. 
-                // We can set a flag `currentNightRole.isFake = true`.
-                currentNightRole.isFake = true;
-            } else {
-                // Real turn
-                // Try to use Handler system if available
-                const handler = getRoleHandler(role.id);
-                
-                if (handler) {
-                    // Use new Handler system
-                    const gameState = {
-                        playerRoles: playerRoles,
-                        centerCards: centerCards,
-                        currentPlayerIndex: playerRoles.findIndex(p => p.initialRoleId === role.id)
-                    };
-                    
-                    const turnInfo = handler.startTurn(gameState);
-                    console.log(`[Handler] ${role.id} turn started:`, turnInfo);
-                    
-                    // Handler might update instruction message
-                    if (turnInfo.message) {
-                        // Keep the timer display but update message
-                        instructionText.innerHTML = `${role.name[currentLang]} - ${turnInfo.message} <span id="action-timer"></span>`;
-                    }
-                    
-                    // Check if turn is already complete (e.g., role is shielded and cannot act)
-                    if (handler.isTurnComplete(gameState)) {
-                        console.log(`[Handler] ${role.id} turn auto-completed (shielded or no action needed)`);
-                        nightActionState.completed = true;
-                    }
-                    
-                    // Render table to apply any highlights/states
-                    renderTable();
-                } else {
-                    console.warn(`No handler found for role ${role.id}`);
-                }
-            }
         });
     } else {
         instructionText.innerText = i18n[currentLang].dayStart;
@@ -1473,25 +1470,71 @@ function createCard(type, index, label) {
     }
     
     // --- Token Rendering ---
+    // Tokens are split into two categories:
+    // 1. Always visible (on card-face-front/card back design): shield, mark, infection, link
+    // 2. Only visible when card is revealed (on card-face-back/role side): pi-transformed-*, revealed-by-revealer
     if (cardData.tokens && cardData.tokens.length > 0) {
-        const tokenContainer = document.createElement('div');
-        tokenContainer.className = 'token-container';
+        // Tokens for front face (visible on card back)
+        const frontTokens = cardData.tokens.filter(t => 
+            t === 'shield' || t === 'mark' || t === 'infection' || t === 'link'
+        );
         
-        cardData.tokens.forEach(tokenType => {
-            const token = document.createElement('div');
-            token.className = `token ${tokenType}`;
-            
-            // Optional: Add icon/text based on type
-            if (tokenType === 'shield') token.innerText = '🛡️';
-            else if (tokenType === 'mark') token.innerText = '🎯';
-            else if (tokenType === 'infection') token.innerText = '🧟';
-            else if (tokenType === 'link') token.innerText = '🔗';
-            else if (tokenType === 'revealed-by-revealer') token.innerText = '👁️';
-            
-            tokenContainer.appendChild(token);
-        });
+        // Tokens for back face (visible only when card is revealed)
+        const backTokens = cardData.tokens.filter(t => 
+            t.startsWith('pi-transformed-') || t === 'revealed-by-revealer'
+        );
         
-        card.appendChild(tokenContainer);
+        // Render front tokens on card-face-front (the card back design)
+        if (frontTokens.length > 0) {
+            const frontContainer = document.createElement('div');
+            frontContainer.className = 'token-container';
+            
+            frontTokens.forEach(tokenType => {
+                const token = document.createElement('div');
+                token.className = `token ${tokenType}`;
+                
+                if (tokenType === 'shield') token.innerText = '🛡️';
+                else if (tokenType === 'mark') token.innerText = '🎯';
+                else if (tokenType === 'infection') token.innerText = '🧟';
+                else if (tokenType === 'link') token.innerText = '🔗';
+                
+                frontContainer.appendChild(token);
+            });
+            
+            faceFront.appendChild(frontContainer);
+        }
+        
+        // Render back tokens on card-face-back (the role side - only visible when flipped)
+        if (backTokens.length > 0) {
+            const backContainer = document.createElement('div');
+            backContainer.className = 'token-container';
+            
+            backTokens.forEach(tokenType => {
+                const token = document.createElement('div');
+                token.className = `token ${tokenType}`;
+                
+                if (tokenType === 'revealed-by-revealer') {
+                    token.innerText = '👁️';
+                } else if (tokenType.startsWith('pi-transformed-')) {
+                    // Show indicator for P.I. transformation
+                    const transformedRole = tokenType.replace('pi-transformed-', '');
+                    if (transformedRole === 'werewolf' || transformedRole === 'dreamwolf' || transformedRole === 'mysticwolf') {
+                        token.innerText = '🐺';
+                    } else if (transformedRole === 'minion') {
+                        token.innerText = '👹';
+                    } else if (transformedRole === 'tanner') {
+                        token.innerText = '🎭';
+                    } else {
+                        token.innerText = '🔄';
+                    }
+                    token.title = `P.I. transformed to ${transformedRole}`;
+                }
+                
+                backContainer.appendChild(token);
+            });
+            
+            faceBack.appendChild(backContainer);
+        }
     }
     
     // Check if card should be permanently revealed (by Revealer)
@@ -2451,8 +2494,12 @@ class WerewolfHandler extends RoleHandler {
             viewedCenter: false
         };
         
-        // Check for other werewolves
-        const werewolves = gameState.playerRoles.filter(p => p.roles.actual === 'werewolf' || p.roles.actual === 'dreamwolf');
+        // Check for other werewolves (includes werewolf, dreamwolf, mysticwolf)
+        const werewolves = gameState.playerRoles.filter(p => 
+            p.roles.actual === 'werewolf' || 
+            p.roles.actual === 'dreamwolf' || 
+            p.roles.actual === 'mysticwolf'
+        );
         this.actionState.isLoneWolf = werewolves.length === 1;
         
         let message;
