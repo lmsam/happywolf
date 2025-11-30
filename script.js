@@ -39,7 +39,25 @@ const i18n = {
         discussion: '討論時間',
         vote: '請投票！',
         voteScript: '時間到！請投票！',
-        alertDeckCount: '請選擇 {target} 張卡牌！'
+        alertDeckCount: '請選擇 {target} 張卡牌！',
+        roleAction: {
+            apprenticeseer: "學徒預言家，請查看一張中間卡牌。",
+            witch: "女巫，請查看一張中間卡牌，然後與任何玩家交換。",
+            troublemaker: "搗蛋鬼，請交換兩位玩家的卡牌。",
+            drunk: "醉漢，請將你的卡牌與一張中間卡牌交換。",
+            insomniac: "失眠者，請查看你自己的卡牌。",
+            doppelganger: "化身幽靈，請查看一張其他玩家的卡牌。",
+            seer: "預言家，請查看一位玩家的卡牌，或兩張中間卡牌。",
+            robber: "強盜，請查看一位玩家的卡牌，然後與你的卡牌交換。",
+            minion: "爪牙，請確認狼人身份。",
+            sentinel: "守衛，請將盾牌標記放在一位玩家的卡牌上。",
+            pi: "偵探，請查看最多兩張玩家卡牌。如果你睻到狼人或爪牙，你會變成該角色。",
+            mysticwolf: "神秘狼，你可以睇一張其他玩家嘅牌。",
+            revealer: "揭示者，翻開一張玩家牌。如果係狼人或皮匠，要翻返落面。"
+        },
+        shieldBlocked: "你被盾牌保護,無法行動。",
+        loneWolf: "你係唯一一隻狼，可以睇一張中間卡。",
+        werewolf: "狼人，請互相確認身份。"
     },
     'en-US': {
         appTitle: 'One Night Ultimate Werewolf',
@@ -80,18 +98,46 @@ const i18n = {
         discussion: 'Discussion',
         vote: 'Vote!',
         voteScript: 'Time is up! Please vote!',
-        alertDeckCount: 'Please select {target} cards!'
+        alertDeckCount: 'Please select {target} cards!',
+        roleAction: {
+            apprenticeseer: "Apprentice Seer, view one center card.",
+            witch: "Witch, view a center card then swap it with any player.",
+            troublemaker: "Troublemaker, swap two players.",
+            drunk: "Drunk, swap your card with a center card.",
+            insomniac: "Insomniac, view your own card.",
+            doppelganger: "Doppelgänger, view another player's card.",
+            seer: "Seer, view a player card or two center cards.",
+            robber: "Robber, view a player card then swap with yours.",
+            minion: "Minion, check who the werewolves are.",
+            sentinel: "Sentinel, place a shield token on a player card.",
+            pi: "P.I., view up to 2 player cards. If you see a Werewolf or Minion, you become that role.",
+            mysticwolf: "Mystic Wolf, you may look at one other player's card.",
+            revealer: "Revealer, flip one player's card face up. If Werewolf or Tanner, flip it back."
+        },
+        shieldBlocked: "You are shielded and cannot act.",
+        loneWolf: "You are alone. You may view one center card.",
+        werewolf: "Werewolves, wake up and look for other werewolves."
     }
 };
 
 const rolesData = [
+    { 
+        id: 'sentinel', 
+        name: { 'zh-HK': '守衛', 'en-US': 'Sentinel' },
+        desc: { 'zh-HK': '將盾牌標記放在任何玩家的卡牌上。', 'en-US': 'Place a shield token on any player\'s card.' },
+        tips: { 'zh-HK': '保護重要角色，或者保護自己！', 'en-US': 'Protect important roles, or yourself!' },
+        team: 'village',
+        wakeOrder: 1, duration: 10, 
+        scriptStart: { 'zh-HK': '守衛請擘大眼，將盾牌標記放在任何玩家的卡牌上', 'en-US': 'Sentinel, wake up. You may place a shield token on any player\'s card.' },
+        scriptEnd: { 'zh-HK': '守衛請閉眼', 'en-US': 'Sentinel, close your eyes.' }
+    },
     { 
         id: 'doppelganger', 
         name: { 'zh-HK': '化身幽靈', 'en-US': 'Doppelgänger' },
         desc: { 'zh-HK': '複製另一個玩家的技能。', 'en-US': 'Look at another player\'s card and become that role.' },
         tips: { 'zh-HK': '如果睇到狼人，你就會變成狼人！', 'en-US': 'If you see a Werewolf, you become a Werewolf!' },
         team: 'village', // Variable, but starts as village usually
-        wakeOrder: 1, duration: 10, 
+        wakeOrder: 2, duration: 10, 
         scriptStart: { 'zh-HK': '化身幽靈請擘大眼，睇一張其他人嘅牌', 'en-US': 'Doppelgänger, wake up and look at another player\'s card.' },
         scriptEnd: { 'zh-HK': '化身幽靈請閉眼', 'en-US': 'Doppelgänger, close your eyes.' }
     },
@@ -101,7 +147,7 @@ const rolesData = [
         desc: { 'zh-HK': '互相確認身份。如果只有你一個，可以睇一張中間牌。', 'en-US': 'Wake up and look for other werewolves. If alone, look at a center card.' },
         tips: { 'zh-HK': '扮好人！', 'en-US': 'Act like a villager!' },
         team: 'werewolf',
-        wakeOrder: 2, duration: 15, 
+        wakeOrder: 3, duration: 10, 
         scriptStart: { 'zh-HK': '狼人請擘大眼，互相確認身份。如果你係唯一一隻狼，可以睇一張中間嘅牌。', 'en-US': 'Werewolves, wake up and look for other werewolves. If you are the only werewolf, you may look at one center card.' },
         scriptEnd: { 'zh-HK': '狼人請閉眼', 'en-US': 'Werewolves, close your eyes.' }
     },
@@ -121,7 +167,7 @@ const rolesData = [
         desc: { 'zh-HK': '知道邊個係狼人，但狼人唔知你係邊個。', 'en-US': 'Know who the Werewolves are, but they don\'t know you.' },
         tips: { 'zh-HK': '保護狼人，甚至幫佢哋頂罪！', 'en-US': 'Protect the Werewolves, even sacrifice yourself!' },
         team: 'werewolf',
-        wakeOrder: 3, duration: 10, 
+        wakeOrder: 4, duration: 10, 
         scriptStart: { 'zh-HK': '爪牙請擘大眼，狼人請舉起手指公俾爪牙確認身份', 'en-US': 'Minion, wake up. Werewolves, stick out your thumb so the Minion can see you.' },
         scriptEnd: { 'zh-HK': '爪牙請閉眼，狼人請收埋手指公', 'en-US': 'Minion, close your eyes. Werewolves, put your thumbs away.' }
     },
@@ -131,7 +177,7 @@ const rolesData = [
         desc: { 'zh-HK': '互相確認身份。如果你係唯一守夜人，即係另一張喺中間。', 'en-US': 'See other Masons. If alone, the other is in the center.' },
         tips: { 'zh-HK': '第一時間搵同伴！', 'en-US': 'Find your partner immediately!' },
         team: 'village',
-        wakeOrder: 4, duration: 10, 
+        wakeOrder: 5, duration: 10, 
         scriptStart: { 'zh-HK': '守夜人請擘大眼，互相確認身份', 'en-US': 'Masons, wake up and look for other Masons.' },
         scriptEnd: { 'zh-HK': '守夜人請閉眼', 'en-US': 'Masons, close your eyes.' }
     },
@@ -141,7 +187,7 @@ const rolesData = [
         desc: { 'zh-HK': '查看一張玩家卡或兩張中間卡。', 'en-US': 'View a player card or 2 center cards.' },
         tips: { 'zh-HK': '小心唔好太早暴露身份！', 'en-US': 'Don\'t reveal yourself too early!' },
         team: 'village',
-        wakeOrder: 5, duration: 10, 
+        wakeOrder: 6, duration: 10, 
         scriptStart: { 'zh-HK': '預言家請擘大眼，睇一張其他人嘅牌，或者睇中間兩張牌', 'en-US': 'Seer, wake up. You may look at another player\'s card or two of the center cards.' },
         scriptEnd: { 'zh-HK': '預言家請閉眼', 'en-US': 'Seer, close your eyes.' }
     },
@@ -154,6 +200,16 @@ const rolesData = [
         wakeOrder: 7, duration: 10, 
         scriptStart: { 'zh-HK': '學徒預言家請擘大眼，睇一張中間嘅牌', 'en-US': 'Apprentice Seer, wake up. You may look at one of the center cards.' },
         scriptEnd: { 'zh-HK': '學徒預言家請閉眼', 'en-US': 'Apprentice Seer, close your eyes.' }
+    },
+    { 
+        id: 'pi', 
+        name: { 'zh-HK': '偵探', 'en-US': 'P.I.' },
+        desc: { 'zh-HK': '查看最多兩張玩家卡。如果睇到狼人、爪牙或皮匠，你會變成該角色。', 'en-US': 'View up to 2 player cards. If you see a Werewolf, Minion, or Tanner, you become that role.' },
+        tips: { 'zh-HK': '小心！睇到狼人你就會變成狼人！睇到皮匠你就要令自己被殺！', 'en-US': 'Be careful! See a Werewolf and you become one! See a Tanner and you must get killed!' },
+        team: 'village',
+        wakeOrder: 5.5, duration: 15, 
+        scriptStart: { 'zh-HK': '偵探請擘大眼，你可以睇最多兩張其他玩家嘅牌。如果你睇到狼人、爪牙或者皮匠，你就會變成嗰個角色，然後要即刻閉眼。', 'en-US': 'P.I., wake up. You may look at up to two other players\' cards. If you see a Werewolf, Minion, or Tanner, you become that role and must immediately close your eyes.' },
+        scriptEnd: { 'zh-HK': '偵探請閉眼', 'en-US': 'P.I., close your eyes.' }
     },
     { 
         id: 'robber', 
@@ -171,7 +227,7 @@ const rolesData = [
         desc: { 'zh-HK': '查看一張中間卡，然後將其與任何玩家交換。', 'en-US': 'View a center card, then swap it with any player.' },
         tips: { 'zh-HK': '你可以將狼人卡換俾其他人！', 'en-US': 'You can swap a Werewolf card to someone else!' },
         team: 'village',
-        wakeOrder: 10, duration: 15, 
+        wakeOrder: 10, duration: 10, 
         scriptStart: { 'zh-HK': '女巫請擘大眼，睇一張中間嘅牌，然後將佢同任何一個玩家交換', 'en-US': 'Witch, wake up. You may look at one of the center cards and then exchange it with any player\'s card.' },
         scriptEnd: { 'zh-HK': '女巫請閉眼', 'en-US': 'Witch, close your eyes.' }
     },
@@ -204,6 +260,26 @@ const rolesData = [
         wakeOrder: 13, duration: 10, 
         scriptStart: { 'zh-HK': '失眠者請擘大眼，確認自己嘅身份', 'en-US': 'Insomniac, wake up and look at your card.' },
         scriptEnd: { 'zh-HK': '失眠者請閉眼', 'en-US': 'Insomniac, close your eyes.' }
+    },
+    { 
+        id: 'mysticwolf', 
+        name: { 'zh-HK': '神秘狼', 'en-US': 'Mystic Wolf' },
+        desc: { 'zh-HK': '狼人陣營。狼人回合後，可以睇一張其他玩家嘅牌。', 'en-US': 'Werewolf team. After werewolf phase, look at one other player\'s card.' },
+        tips: { 'zh-HK': '可以扮 Robber 話自己搶咗嗰個人嘅牌！', 'en-US': 'Claim Robber and say you stole the card you viewed!' },
+        team: 'werewolf',
+        wakeOrder: 2.5, duration: 10, 
+        scriptStart: { 'zh-HK': '神秘狼請擘大眼，你可以睇一張其他玩家嘅牌', 'en-US': 'Mystic Wolf, wake up. You may look at one other player\'s card.' },
+        scriptEnd: { 'zh-HK': '神秘狼請閉眼', 'en-US': 'Mystic Wolf, close your eyes.' }
+    },
+    { 
+        id: 'revealer', 
+        name: { 'zh-HK': '揭示者', 'en-US': 'Revealer' },
+        desc: { 'zh-HK': '翻開一張玩家牌。如果係村民陣營就保持翻開；狼人/皮匠就蓋返。', 'en-US': 'Flip one player\'s card face up. Village cards stay revealed; Werewolf/Tanner flip back.' },
+        tips: { 'zh-HK': '揭到村民可以確認身份，揭到狼人只有你知！', 'en-US': 'Reveal a villager to confirm them; reveal a werewolf and only you know!' },
+        team: 'village',
+        wakeOrder: 14, duration: 10, 
+        scriptStart: { 'zh-HK': '揭示者請擘大眼，翻開一張其他玩家嘅牌。如果係狼人或者皮匠，翻返落面', 'en-US': 'Revealer, wake up. Flip one player\'s card face up. If it is a Werewolf or Tanner, flip it back face down.' },
+        scriptEnd: { 'zh-HK': '揭示者請閉眼', 'en-US': 'Revealer, close your eyes.' }
     },
     { id: 'villager', name: { 'zh-HK': '村民', 'en-US': 'Villager' }, desc: { 'zh-HK': '無特殊能力，靠推理搵出狼人。', 'en-US': 'No special ability. Find Werewolves by deduction.' }, tips: { 'zh-HK': '專心聽人講嘢，搵出破綻！', 'en-US': 'Listen carefully and find inconsistencies!' }, team: 'village', wakeOrder: -1 },
     { id: 'tanner', name: { 'zh-HK': '皮匠', 'en-US': 'Tanner' }, desc: { 'zh-HK': '如果你死咗，你就贏。', 'en-US': 'You win if you die.' }, tips: { 'zh-HK': '扮到好似狼人咁，引人投你！', 'en-US': 'Act suspicious so people vote for you!' }, team: 'tanner', wakeOrder: -1 },
@@ -350,6 +426,7 @@ function randomizeSeats() {
 
 // Image Mapping
 const roleImageMap = {
+    'sentinel': 'Sentinel.jpg',
     'doppelganger': 'Doppelganger.png',
     'drunk': 'Drunk.png',
     'hunter': 'Hunter.png',
@@ -364,7 +441,10 @@ const roleImageMap = {
     'dreamwolf': 'DreamWolf.png',
     'minion': 'minion.png',
     'apprenticeseer': 'ApprenticeSeer.png',
-    'witch': 'Witch.png'
+    'witch': 'Witch.png',
+    'pi': 'PI.png',
+    'mysticwolf': 'MysticWolf.png',
+    'revealer': 'Revealer.png'
 };
 
 function renderLibrary() {
@@ -636,19 +716,36 @@ function nextStep() {
                 currentNightRole.isFake = true;
             } else {
                 // Real turn
-                // Auto-advance for non-interactive roles
-                if (['minion', 'mason', 'insomniac'].includes(role.id)) {
-                     // Just wait for timer
-                } else if (role.id === 'werewolf') {
-                    // Werewolf logic...
-                    const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
-                    if (werewolfCount > 1) {
-                        renderTable(); // Highlight
-                    } else if (werewolfCount === 1) {
-                        // Lone Wolf: Highlight Center Cards
-                        const centerCardsEls = document.querySelectorAll('.table-card[data-type="center"]');
-                        centerCardsEls.forEach(el => el.classList.add('highlight'));
+                // Try to use Handler system if available
+                const handler = getRoleHandler(role.id);
+                
+                if (handler) {
+                    // Use new Handler system
+                    const gameState = {
+                        playerRoles: playerRoles,
+                        centerCards: centerCards,
+                        currentPlayerIndex: playerRoles.findIndex(p => p.initialRoleId === role.id)
+                    };
+                    
+                    const turnInfo = handler.startTurn(gameState);
+                    console.log(`[Handler] ${role.id} turn started:`, turnInfo);
+                    
+                    // Handler might update instruction message
+                    if (turnInfo.message) {
+                        // Keep the timer display but update message
+                        instructionText.innerHTML = `${role.name[currentLang]} - ${turnInfo.message} <span id="action-timer"></span>`;
                     }
+                    
+                    // Check if turn is already complete (e.g., role is shielded and cannot act)
+                    if (handler.isTurnComplete(gameState)) {
+                        console.log(`[Handler] ${role.id} turn auto-completed (shielded or no action needed)`);
+                        nightActionState.completed = true;
+                    }
+                    
+                    // Render table to apply any highlights/states
+                    renderTable();
+                } else {
+                    console.warn(`No handler found for role ${role.id}`);
                 }
             }
         });
@@ -932,25 +1029,97 @@ function handleCardClick(type, index) {
         // Check for Mimic ID first
         const roleId = currentNightRole.mimicId || currentNightRole.id;
         
-        if (roleId === 'doppelganger') {
-            handleDoppelgangerAction(type, index);
-        } else if (roleId === 'werewolf') {
-            handleWerewolfAction(type, index);
-        } else if (roleId === 'seer') {
-            handleSeerAction(type, index);
-        } else if (roleId === 'apprenticeseer') {
-            handleApprenticeSeerAction(type, index);
-        } else if (roleId === 'robber') {
-            handleRobberAction(type, index);
-        } else if (roleId === 'witch') {
-            handleWitchAction(type, index);
-        } else if (roleId === 'troublemaker') {
-            handleTroublemakerAction(type, index);
-        } else if (roleId === 'drunk') {
-            handleDrunkAction(type, index);
-        } else if (roleId === 'insomniac') {
-            handleInsomniacAction(type, index);
+        // Try to use Handler system first
+        const handler = getRoleHandler(roleId);
+        
+        if (handler) {
+            // Use new Handler system
+            const gameState = {
+                playerRoles: playerRoles,
+                centerCards: centerCards,
+                currentPlayerIndex: activePlayerIndex
+            };
+            
+            const result = handler.handleAction(gameState, type, index);
+            
+            // Support both boolean and object return values
+            const handled = typeof result === 'object' ? result.handled : result;
+            const shouldReveal = typeof result === 'object' ? result.shouldReveal : true;
+            const needsRerender = typeof result === 'object' ? result.needsRerender : false;
+            // Support custom reveal target (e.g., Robber reveals their own card after swap)
+            const revealTarget = typeof result === 'object' && result.revealTarget ? result.revealTarget : { type, index };
+            
+            if (handled) {
+                console.log(`[Handler] ${roleId} handled action:`, type, index);
+                
+                // Handle P.I. transformation - "跟牌" mode
+                // The transformation is bound to the CARD (not player) using a token
+                // If the card gets swapped away, whoever holds the P.I. card inherits the win condition
+                if (handler.actionState && handler.actionState.transformed && handler.actionState.transformedTo) {
+                    const newRole = handler.actionState.transformedTo;
+                    const cardIndex = handler.actionState.transformedCardIndex ?? activePlayerIndex;
+                    
+                    // Add transformation token to the P.I.'s CARD
+                    // This token will move with the card if it gets swapped
+                    addToken({ type: 'player', index: cardIndex }, `pi-transformed-${newRole}`);
+                    
+                    // Update perceived role so P.I. knows what they became
+                    if (playerRoles[activePlayerIndex].roles) {
+                        playerRoles[activePlayerIndex].roles.perceived = newRole;
+                    }
+                    console.log(`[P.I.] Card at position ${cardIndex} transformed to ${newRole} (token bound to card)`);
+                }
+                
+                // Handle Revealer - mark card as permanently revealed if village team
+                if (handler.actionState && handler.actionState.hasRevealed && handler.actionState.shouldStayRevealed) {
+                    const revealedIndex = handler.actionState.revealedPlayerIndex;
+                    // Add a token to mark this card as permanently revealed
+                    addToken({ type: 'player', index: revealedIndex }, 'revealed-by-revealer');
+                    console.log(`[Revealer] Card at position ${revealedIndex} marked as permanently revealed`);
+                }
+                
+                // Re-render first if needed (e.g., to show tokens or swapped cards)
+                // This must happen BEFORE revealing to avoid losing the revealed state
+                if (needsRerender) {
+                    renderTable();
+                }
+                
+                // Reveal card if applicable (some roles like Sentinel don't reveal)
+                if (shouldReveal) {
+                    const card = getCardElement(revealTarget.type, revealTarget.index);
+                    if (card && !card.classList.contains('revealed')) {
+                        card.classList.add('revealed');
+                        
+                        // Check if this is a Revealer reveal that should stay open
+                        const shouldStayOpen = handler.actionState && 
+                                               handler.actionState.shouldStayRevealed && 
+                                               revealTarget.index === handler.actionState.revealedPlayerIndex;
+                        
+                        if (!shouldStayOpen) {
+                            // Normal reveal - hide after 2 seconds
+                            setTimeout(() => card.classList.remove('revealed'), 2000);
+                        } else {
+                            // Revealer revealed a village card - stays revealed permanently
+                            console.log(`[Revealer] Card stays revealed permanently`);
+                        }
+                    }
+                }
+                
+                // Check if turn is complete
+                if (handler.isTurnComplete(gameState)) {
+                    console.log(`[Handler] ${roleId} turn complete`);
+                    nightActionState.completed = true; // Block further clicks immediately
+                    setTimeout(finishNightStep, 2000);
+                }
+                
+                return; // Handler processed the action
+            }
+            // Handler exists but didn't handle this action (invalid click, e.g., wrong card type)
+            // This is normal - just silently ignore
+            return;
         }
+        
+        console.warn(`No handler found for role ${roleId}`);
     }
 }
 
@@ -1013,332 +1182,9 @@ function handleDoppelgangerAction(type, index) {
     }
 }
 
-function handleWerewolfAction(type, index) {
-    // Werewolf: If solo, can peek 1 center. If pack, just confirm.
-    const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
-    
-    if (werewolfCount === 1) {
-        // Solo werewolf can peek center
-        if (type !== 'center') return;
-        if (nightActionState.viewed > 0) return;
-        
-        const targetRoleId = centerCards[index].roleId;
-        
-        // Reveal Card (Flip)
-        const card = getCardElement(type, index);
-        if (card) {
-            card.classList.add('revealed');
-            setTimeout(() => card.classList.remove('revealed'), 2000);
-        }
-        
-        nightActionState.viewed++;
-        setTimeout(finishNightStep, 2000);
-    } else {
-        // Pack werewolves - they just see each other (already highlighted)
-        // Any click advances
-        if (!nightActionState.confirmed) {
-            nightActionState.confirmed = true;
-            setTimeout(finishNightStep, 500);
-        }
-    }
-}
 
-function handleSeerAction(type, index) {
-    // Seer: View 1 Player OR 2 Center
-    
-    if (nightActionState.viewed >= 2) return; // Max limit
-    if (type === 'player' && nightActionState.selection.some(s => s.type === 'player')) return; // Already viewed a player
-    if (type === 'player' && nightActionState.selection.length > 0 && nightActionState.selection[0].type === 'center') return; // Can't mix player and center
-    
-    // Reveal Card (Flip)
-    const card = getCardElement(type, index);
-    if (card) {
-        card.classList.add('revealed');
-        setTimeout(() => card.classList.remove('revealed'), 3000);
-    }
-    
-    nightActionState.viewed++;
-    nightActionState.selection.push({ type, index });
-    
-    // Check completion
-    if (type === 'player') {
-        // Viewed 1 player -> Done
-        const activeRoleId = currentNightRole.id;
-        setTimeout(() => {
-            if (currentNightRole.id !== activeRoleId) return; // Turn changed
-            nightActionState.completed = true;
-            // If timer already expired, advance immediately
-            if (nightActionState.timerExpired) {
-                finishNightStep();
-            }
-        }, 3500); // Wait for flip back + buffer
-    } else if (nightActionState.viewed === 2 && nightActionState.selection.every(s => s.type === 'center')) {
-        const activeRoleId = currentNightRole.id;
-        setTimeout(() => {
-            if (currentNightRole.id !== activeRoleId) return; // Turn changed
-            nightActionState.completed = true;
-            if (nightActionState.timerExpired) {
-                finishNightStep();
-            }
-        }, 3500);
-    }
-}
 
-function handleApprenticeSeerAction(type, index) {
-    // Apprentice Seer: View 1 Center Card only
-    if (type !== 'center') return;
-    if (nightActionState.viewed >= 1) return;
-    
-    const card = getCardElement(type, index);
-    if (card) {
-        card.classList.add('revealed');
-        setTimeout(() => card.classList.remove('revealed'), 3000);
-    }
-    
-    nightActionState.viewed++;
-    nightActionState.selection.push({ type, index });
-    
-    const activeRoleId = currentNightRole.id;
-    setTimeout(() => {
-        if (currentNightRole.id !== activeRoleId) return; // Turn changed
-        nightActionState.completed = true;
-        if (nightActionState.timerExpired) {
-            finishNightStep();
-        }
-    }, 3500);
-}
 
-function handleRobberAction(type, index) {
-    // Robber: Swap with 1 Player and View
-    if (type !== 'player') return;
-    if (nightActionState.swapped) return;
-    
-    // Wait, Robber swaps SELF with Target. We need to know who is Robber.
-    // If Mimicking, we are the current player (or the doppelganger slot).
-    // Actually, Robber swaps "My Card" with "Target Card".
-    
-    let robberIdx = playerRoles.findIndex(p => p.initialRoleId === 'robber');
-    
-    // Special handling for Doppelganger mimicking Robber
-    if (currentNightRole.mimicId === 'robber') {
-        robberIdx = playerRoles.findIndex(p => p.initialRoleId === 'doppelganger');
-    }
-    
-    if (robberIdx === -1) return; 
-    if (index === robberIdx) return; // Can't rob self
-    
-    // Swap Data
-    const temp = playerRoles[robberIdx].roleId;
-    playerRoles[robberIdx].roleId = playerRoles[index].roleId;
-    playerRoles[index].roleId = temp;
-    
-    console.log(`[Robber] Swapped Player ${robberIdx} with Player ${index}`);
-    saveGameState();
-    logCurrentRoles("After Robber Action");
-    
-    nightActionState.swapped = true;
-    nightActionState.selection = [{ type: 'player', index }]; // Track selected card
-    
-    // Re-render to update card content (images/text) and highlighting
-    renderTable();
-    
-    // Animate Swap
-    animateSwap(getCardElement('player', robberIdx), getCardElement('player', index));
-    
-    // View New Card (Flip Self)
-    const robberCard = getCardElement('player', robberIdx);
-    if (robberCard) {
-        robberCard.classList.add('revealed');
-        setTimeout(() => robberCard.classList.remove('revealed'), 3000);
-    }
-    
-    const activeRoleId = currentNightRole.id;
-    setTimeout(() => {
-        if (currentNightRole.id !== activeRoleId) return; // Turn changed
-        nightActionState.completed = true;
-        if (nightActionState.timerExpired) {
-            finishNightStep();
-        }
-    }, 4500);
-}
-
-function handleWitchAction(type, index) {
-    // Witch: View 1 Center Card, then Swap with ANY Player
-    
-    // Step 1: View Center Card
-    if (!nightActionState.viewedCenter) {
-        if (type !== 'center') return; // Must view center first
-        
-        // Reveal Card
-        const card = getCardElement(type, index);
-        if (card) {
-            card.classList.add('revealed');
-            setTimeout(() => card.classList.remove('revealed'), 3000);
-        }
-        
-        nightActionState.viewedCenter = true;
-        nightActionState.centerIndex = index;
-        nightActionState.selection.push({ type, index });
-        
-        // Update instruction
-        instructionText.innerText = currentLang === 'zh-HK' ? "現在將這張卡與任何玩家交換" : "Now swap this card with any player";
-        return;
-    }
-    
-    // Step 2: Swap with Player
-    if (type === 'player' && !nightActionState.swapped) {
-        const centerIdx = nightActionState.centerIndex;
-        const playerIdx = index;
-        
-        // Swap Data
-        const tempRole = centerCards[centerIdx].roleId;
-        centerCards[centerIdx].roleId = playerRoles[playerIdx].roleId;
-        playerRoles[playerIdx].roleId = tempRole;
-        
-        console.log(`[Witch] Swapped Center ${centerIdx} with Player ${playerIdx}`);
-        saveGameState();
-        logCurrentRoles("After Witch Action");
-        
-        nightActionState.swapped = true;
-        nightActionState.selection.push({ type, index });
-        
-        // Re-render
-        renderTable();
-        
-        // Animate Swap
-        animateSwap(getCardElement('center', centerIdx), getCardElement('player', playerIdx));
-        
-        const activeRoleId = currentNightRole.id;
-        setTimeout(() => {
-            if (currentNightRole.id !== activeRoleId) return; // Turn changed
-            nightActionState.completed = true;
-            if (nightActionState.timerExpired) {
-                finishNightStep();
-            }
-        }, 2000);
-    }
-}
-
-function handleTroublemakerAction(type, index) {
-    // Swap 2 players
-    if (type !== 'player') return;
-    if (nightActionState.swapped) return;
-    
-    // Check if already selected
-    if (nightActionState.selection.some(s => s.index === index)) return;
-    
-    // Prevent selecting self (should be handled by UI, but double check)
-    let selfIdx = playerRoles.findIndex(p => p.initialRoleId === 'troublemaker');
-    if (currentNightRole.mimicId === 'troublemaker') {
-        selfIdx = playerRoles.findIndex(p => p.initialRoleId === 'doppelganger');
-    }
-    if (index === selfIdx) return;
-
-    nightActionState.selection.push({ type, index });
-    renderTable(); // Update highlights (Green)
-    
-    if (nightActionState.selection.length === 2) {
-        const idx1 = nightActionState.selection[0].index;
-        const idx2 = nightActionState.selection[1].index;
-        
-        // Swap
-        const temp = playerRoles[idx1].roleId;
-        playerRoles[idx1].roleId = playerRoles[idx2].roleId;
-        playerRoles[idx2].roleId = temp;
-        
-        console.log(`[Troublemaker] Swapped Player ${idx1} with Player ${idx2}`);
-        saveGameState();
-        logCurrentRoles("After Troublemaker Action");
-        
-        nightActionState.swapped = true;
-        
-        // Update Text
-        instructionText.innerText = currentLang === 'zh-HK' ? "已交換" : "Swapped";
-        
-        // Animate
-        animateSwap(getCardElement('player', idx1), getCardElement('player', idx2));
-        
-        const activeRoleId = currentNightRole.id;
-        setTimeout(() => {
-            if (currentNightRole.id !== activeRoleId) return; // Turn changed
-            nightActionState.completed = true;
-            if (nightActionState.timerExpired) {
-                finishNightStep();
-            }
-        }, 2000);
-    }
-}
-
-function handleDrunkAction(type, index) {
-    // Swap self with Center
-    if (type !== 'center') return;
-    if (nightActionState.swapped) return;
-    
-    let drunkIdx = playerRoles.findIndex(p => p.initialRoleId === 'drunk');
-    
-    // Special handling for Doppelganger mimicking Drunk
-    if (currentNightRole.mimicId === 'drunk') {
-        drunkIdx = playerRoles.findIndex(p => p.initialRoleId === 'doppelganger');
-    }
-    
-    if (drunkIdx === -1) return;
-    
-    // Swap
-    const temp = playerRoles[drunkIdx].roleId;
-    playerRoles[drunkIdx].roleId = centerCards[index].roleId;
-    centerCards[index].roleId = temp;
-    
-    console.log(`Drunk Action: Swapped Drunk (Player ${drunkIdx}) with Center ${index}`);
-    
-    nightActionState.swapped = true;
-    saveGameState();
-    setTimeout(() => {
-        nightActionState.completed = true;
-        if (nightActionState.timerExpired) {
-            finishNightStep();
-        }
-    }, 1000);
-}
-
-function handleInsomniacAction(type, index) {
-    // Insomniac: View own card
-    if (type !== 'player') return;
-    
-    // Identify valid Insomniacs (Original + Doppelganger-Copy)
-    const isOriginal = playerRoles[index].initialRoleId === 'insomniac';
-    const isDoppelgangerCopy = playerRoles[index].initialRoleId === 'doppelganger' && playerRoles[index].mimickedRole === 'insomniac';
-    
-    if (!isOriginal && !isDoppelgangerCopy) return; // Not an Insomniac
-    
-    // Check if already viewed this specific card
-    if (nightActionState.selection && nightActionState.selection.some(s => s.index === index)) return;
-    
-    // Calculate Total Insomniacs to determine when to finish
-    const totalInsomniacs = playerRoles.filter(p => p.initialRoleId === 'insomniac' || (p.initialRoleId === 'doppelganger' && p.mimickedRole === 'insomniac')).length;
-    
-    if (nightActionState.viewed >= totalInsomniacs) return;
-    
-    // Reveal Card (Flip)
-    const card = getCardElement(type, index);
-    if (card) {
-        card.classList.add('revealed');
-        setTimeout(() => card.classList.remove('revealed'), 3000);
-    }
-    
-    nightActionState.viewed++;
-    if (!nightActionState.selection) nightActionState.selection = [];
-    nightActionState.selection.push({ type, index });
-    
-    // Finish if all Insomniacs have acted
-    if (nightActionState.viewed >= totalInsomniacs) {
-        setTimeout(() => {
-            nightActionState.completed = true;
-            if (nightActionState.timerExpired) {
-                finishNightStep();
-            }
-        }, 3500);
-    }
-}
 
 
 // --- Render Table (Grid Layout) ---
@@ -1599,78 +1445,115 @@ function createCard(type, index, label) {
     if (gamePhaseState === 'PEEK' && type === 'player' && index === currentPeekIndex) {
         shouldHighlight = true;
     }
+    // --- Get Card Data Reference ---
+    let cardData = null;
+    if (type === 'player') {
+        cardData = playerRoles[index];
+    } else if (type === 'center') {
+        cardData = centerCards[index];
+    }
     
-    // 2. Night Phase: Active Role Logic
+    if (!cardData) cardData = {}; // Fallback
+    
+    // --- Interaction State Logic ---
+    if (cardData.interactionState) {
+        if (cardData.interactionState.selectable) card.classList.add('selectable');
+        if (cardData.interactionState.selected) card.classList.add('selected');
+        if (cardData.interactionState.animating) card.classList.add('animating');
+        if (cardData.interactionState.locked) card.classList.add('locked');
+        if (cardData.interactionState.highlighted) card.classList.add('highlighted');
+    }
+    
+    // --- Token Rendering ---
+    if (cardData.tokens && cardData.tokens.length > 0) {
+        const tokenContainer = document.createElement('div');
+        tokenContainer.className = 'token-container';
+        
+        cardData.tokens.forEach(tokenType => {
+            const token = document.createElement('div');
+            token.className = `token ${tokenType}`;
+            
+            // Optional: Add icon/text based on type
+            if (tokenType === 'shield') token.innerText = '🛡️';
+            else if (tokenType === 'mark') token.innerText = '🎯';
+            else if (tokenType === 'infection') token.innerText = '🧟';
+            else if (tokenType === 'link') token.innerText = '🔗';
+            else if (tokenType === 'revealed-by-revealer') token.innerText = '👁️';
+            
+            tokenContainer.appendChild(token);
+        });
+        
+        card.appendChild(tokenContainer);
+    }
+    
+    // Check if card should be permanently revealed (by Revealer)
+    if (type === 'player' && cardData.tokens && cardData.tokens.includes('revealed-by-revealer')) {
+        card.classList.add('revealed');
+    }
+
+    // 2. Night Phase: Active Role Logic (Legacy & Hybrid)
+    // We keep the legacy logic for now but prioritize interactionState if set
     if (gamePhaseState === 'NIGHT' && currentNightRole && !currentNightRole.isFake) {
-        const activeRoleId = currentNightRole.mimicId || currentNightRole.id;
-        
-        // Find Active Player Index (Self)
-        let activePlayerIndex = -1;
-        if (currentNightRole.mimicId) {
-            // Doppelganger is acting
-            activePlayerIndex = playerRoles.findIndex(p => p.initialRoleId === 'doppelganger');
-        } else {
-            // Normal role acting
-            activePlayerIndex = playerRoles.findIndex(p => p.initialRoleId === activeRoleId);
+        // ... (Legacy highlighting logic can remain as fallback or be refactored later)
+        // For now, if interactionState is used, it overrides legacy highlights
+        if (!cardData.interactionState || Object.keys(cardData.interactionState).length === 0) {
+             // Legacy logic here (omitted for brevity in this replacement, but should be preserved if not fully replacing)
+             // Actually, to be safe, let's keep the legacy logic below but ensure it doesn't conflict.
+             // The legacy logic adds 'highlight' class.
+             // Our new logic adds 'selectable', 'highlighted', etc.
+             // They can coexist.
         }
-        
-        // Werewolf Logic
-        if (activeRoleId === 'werewolf' && type === 'player') {
-             if (playerRoles[index].initialRoleId === 'werewolf' || playerRoles[index].initialRoleId === 'dreamwolf' || playerRoles[index].mimickedRole === 'werewolf') {
-                 shouldHighlight = true;
+    }
+    
+    // Legacy Highlight Logic (Preserved for backward compatibility during migration)
+    if (gamePhaseState === 'NIGHT' && currentNightRole && !currentNightRole.isFake) {
+         const activeRoleId = currentNightRole.mimicId || currentNightRole.id;
+         // ... (Original logic)
+         // Since I am replacing a block, I need to be careful not to delete the legacy logic if I want to keep it.
+         // The user instruction was to "Modify renderCard".
+         // Let's assume we want to KEEP the legacy logic for now but ADD the new features.
+         
+         // Re-inserting the legacy logic I am replacing:
+         let activePlayerIndex = -1;
+         if (currentNightRole.mimicId) {
+             activePlayerIndex = playerRoles.findIndex(p => p.initialRoleId === 'doppelganger');
+         } else {
+             activePlayerIndex = playerRoles.findIndex(p => p.initialRoleId === activeRoleId);
+         }
+         
+         if (activeRoleId === 'werewolf' && type === 'player') {
+              if (playerRoles[index].initialRoleId === 'werewolf' || playerRoles[index].initialRoleId === 'dreamwolf' || playerRoles[index].mimickedRole === 'werewolf') {
+                  shouldHighlight = true;
+              }
+         }
+         
+         if (activeRoleId === 'werewolf' && type === 'center') {
+             const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
+             if (werewolfCount === 1) shouldHighlight = true;
+         }
+         
+         if (activeRoleId === 'seer') shouldHighlight = true; 
+         if (activeRoleId === 'drunk' && type === 'center') shouldHighlight = true;
+         
+         if ((activeRoleId === 'robber' || activeRoleId === 'troublemaker') && type === 'player') {
+             if (index !== activePlayerIndex) {
+                 const isSelected = nightActionState.selection && nightActionState.selection.some(s => s.type === type && s.index === index);
+                 if (activeRoleId === 'robber' && nightActionState.swapped) {
+                     if (isSelected) card.classList.add('selected');
+                 } else {
+                     const isSelectionFull = activeRoleId === 'troublemaker' && nightActionState.selection && nightActionState.selection.length >= 2;
+                     if (isSelected) card.classList.add('selected');
+                     else if (!isSelectionFull) shouldHighlight = true;
+                 }
              }
-        }
-        
-        // Solo Werewolf: Highlight Center
-        if (activeRoleId === 'werewolf' && type === 'center') {
-            const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
-            if (werewolfCount === 1) {
-                shouldHighlight = true;
-            }
-        }
-        
-        // Seer: Highlight Players OR Center
-        if (activeRoleId === 'seer') {
-            shouldHighlight = true; 
-        }
-        
-        // Drunk: Highlight Center
-        if (activeRoleId === 'drunk' && type === 'center') {
-            shouldHighlight = true;
-        }
-        
-        // Robber / Troublemaker: Highlight Players EXCEPT Self
-        if ((activeRoleId === 'robber' || activeRoleId === 'troublemaker') && type === 'player') {
-            if (index !== activePlayerIndex) {
-                const isSelected = nightActionState.selection && nightActionState.selection.some(s => s.type === type && s.index === index);
-                
-                // For Robber: if swapped, only show selected card as green
-                if (activeRoleId === 'robber' && nightActionState.swapped) {
-                    if (isSelected) {
-                        card.classList.add('selected'); // Green border
-                    }
-                    // Don't highlight others after swap
-                } else {
-                    // Before swap (or Troublemaker logic)
-                    const isSelectionFull = activeRoleId === 'troublemaker' && nightActionState.selection && nightActionState.selection.length >= 2;
-                    
-                    if (isSelected) {
-                        card.classList.add('selected');
-                    } else if (!isSelectionFull) {
-                        // Only highlight others if selection is NOT full
-                        shouldHighlight = true;
-                    }
-                }
-            }
-        }
-        
-        // Selection State (Generic fallback for other roles if needed)
-        if (activeRoleId !== 'robber' && activeRoleId !== 'troublemaker') {
-            if (nightActionState.selection && nightActionState.selection.some(s => s.type === type && s.index === index)) {
-                 shouldHighlight = true;
-                 card.classList.add('selected'); 
-            }
-        }
+         }
+         
+         if (activeRoleId !== 'robber' && activeRoleId !== 'troublemaker') {
+             if (nightActionState.selection && nightActionState.selection.some(s => s.type === type && s.index === index)) {
+                  shouldHighlight = true;
+                  card.classList.add('selected'); 
+             }
+         }
     }
     
     if (shouldHighlight) {
@@ -1679,9 +1562,21 @@ function createCard(type, index, label) {
     
     // Click Handler
     card.onclick = () => {
-        // If it's a flip reveal (Peek or Seer/Robber reveal), toggle class
-        // But handleCardClick manages logic. 
-        // We need visual flip if the logic says "Reveal".
+        // New Interaction Manager Check
+        if (cardData.interactionState && cardData.interactionState.selectable) {
+            handleCardClick(type, index); // We need to implement this new handler or update the old one
+            // For now, let's assume the old handleCardClick will be updated or we use a new one.
+            // Actually, we haven't implemented the unified handleCardClick in script.js yet (it was in the design doc).
+            // So we should probably stick to the old handler for now, or implement the new one.
+            // The task list says "Implement InteractionManager logic", which we did.
+            // But we didn't implement the unified `handleCardClick` yet.
+            // Let's use the old one for legacy support, but if selectable is true, we might want to trigger the new logic.
+            
+            // For Phase 2, we are just visualizing. The logic refactoring is Phase 3.
+            // So let's keep the old click handler but maybe add a log.
+        }
+        
+        // Legacy Handler
         handleCardClick(type, index);
     };
     
@@ -1961,6 +1856,9 @@ function init() {
 
 function initSetup() {
     console.log("Initializing Setup Phase...");
+    const confirmDeckBtn = document.getElementById('confirm-deck-btn');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const roleModal = document.getElementById('role-modal');
     renderLibrary();
     updateDeckUI();
     
@@ -1971,7 +1869,7 @@ function initSetup() {
     });
     
     document.getElementById('random-seat-btn').addEventListener('click', () => {
-        players.sort(() => Math.random() - 0.5);
+        shuffleArray(players);
         renderPlayerList();
         saveSetupConfig(); // Auto-save on change
     });
@@ -2025,12 +1923,62 @@ function initSetup() {
         }
         
         // Assign Roles
-        playerRoles = players.map((p, i) => ({
-            playerId: p.id,
-            roleId: deck[i],
-            initialRoleId: deck[i],
-            revealed: false
-        }));
+        playerRoles = players.map((p, i) => {
+            const roleId = deck[i];
+            const player = {
+                // New fields
+                id: p.id,
+                name: p.name,
+                seatIndex: i,
+                roles: {
+                    initial: roleId,
+                    perceived: roleId,
+                    actual: roleId
+                },
+                roleHistory: [{
+                    timestamp: Date.now(),
+                    event: 'initial',
+                    role: roleId,
+                    perceived: true
+                }],
+                knowledge: {
+                    viewedCards: [],
+                    swappedCards: [],
+                    heardAnnouncements: [],
+                    seenTokens: []
+                },
+                special: {
+                    cardTransformed: false,
+                    mimicking: null,
+                    linked: null,
+                    infected: false
+                },
+                revealed: false
+            };
+
+            // Backward Compatibility
+            Object.defineProperty(player, 'roleId', {
+                get() { return this.roles.actual; },
+                set(value) { this.roles.actual = value; },
+                enumerable: true,
+                configurable: true
+            });
+
+            Object.defineProperty(player, 'initialRoleId', {
+                get() { return this.roles.initial; },
+                set(value) { this.roles.initial = value; },
+                enumerable: true,
+                configurable: true
+            });
+
+            Object.defineProperty(player, 'playerId', {
+                get() { return this.id; },
+                enumerable: true,
+                configurable: true
+            });
+
+            return player;
+        });
         
         centerCards = deck.slice(players.length).map(roleId => ({
             roleId: roleId,
@@ -2091,6 +2039,16 @@ function initSetup() {
 
 function initGame() {
     console.log("Initializing Game Phase...");
+    const setupPhase = document.getElementById('setup-phase');
+    const gamePhase = document.getElementById('game-phase');
+    const menuBtn = document.getElementById('menu-btn'); // Assuming this exists
+    const resumeBtn = document.getElementById('resume-btn'); // Assuming this exists
+    const endGameBtn = document.getElementById('end-game-btn'); // Assuming this exists
+    const readyBtn = document.getElementById('ready-btn'); // Assuming this exists
+    const closeModalBtn = document.querySelector('.close-modal');
+    const roleModal = document.getElementById('role-modal');
+    const pauseMenu = document.getElementById('pause-menu'); // Assuming this exists
+
     setupPhase.classList.add('hidden');
     gamePhase.classList.remove('hidden');
     
@@ -2169,8 +2127,1110 @@ function logCurrentRoles(label = "Current Roles") {
     centerCards.forEach((c, i) => console.log(`Center ${i + 1}: ${c.roleId}`));
     console.log("---------------------");
 }
-init();
+if (typeof module === 'undefined') {
+    init();
+}
 
+
+
+function swapCards(target1, target2, options = {}) {
+    const {
+        source = 'unknown',
+        silent = false
+    } = options;
+
+    // Helper to get card data
+    const getCard = (target) => {
+        if (target.type === 'player') {
+            const p = playerRoles[target.index];
+            return p ? { role: p.roles.actual, ref: p } : null;
+        } else if (target.type === 'center') {
+            const c = centerCards[target.index];
+            return c ? { role: c.roleId, ref: c } : null;
+        }
+        return null;
+    };
+
+    const card1 = getCard(target1);
+    const card2 = getCard(target2);
+
+    if (!card1 || !card2) {
+        console.error("Invalid swap targets", target1, target2);
+        return;
+    }
+
+    // Perform Swap
+    const role1 = card1.role;
+    const role2 = card2.role;
+
+    // Update Target 1
+    if (target1.type === 'player') {
+        updatePlayerRole(target1.index, role2, {
+            event: 'swap',
+            source: source,
+            target: target2,
+            perceived: false // Swaps are usually hidden from the victim
+        });
+    } else {
+        card1.ref.roleId = role2;
+    }
+
+    // Update Target 2
+    if (target2.type === 'player') {
+        updatePlayerRole(target2.index, role1, {
+            event: 'swap',
+            source: source,
+            target: target1,
+            perceived: false
+        });
+    } else {
+        card2.ref.roleId = role1;
+    }
+    
+    if (!silent) {
+        console.log(`[Swap] ${target1.type} ${target1.index} (${role1}) <-> ${target2.type} ${target2.index} (${role2}) via ${source}`);
+    }
+}
+
+
+
+// --- Token Manager ---
+function addToken(target, token) {
+    const card = getCardRef(target);
+    if (!card) return;
+    
+    if (!card.tokens) card.tokens = [];
+    if (!card.tokens.includes(token)) {
+        card.tokens.push(token);
+    }
+}
+
+function removeToken(target, token) {
+    const card = getCardRef(target);
+    if (!card || !card.tokens) return;
+    
+    const index = card.tokens.indexOf(token);
+    if (index > -1) {
+        card.tokens.splice(index, 1);
+    }
+}
+
+function hasToken(target, token) {
+    const card = getCardRef(target);
+    return card && card.tokens && card.tokens.includes(token);
+}
+
+function clearAllTokens() {
+    // Clear tokens from all players
+    if (playerRoles) {
+        playerRoles.forEach(p => {
+            if (p) p.tokens = [];
+        });
+    }
+    // Clear tokens from all center cards
+    if (centerCards) {
+        centerCards.forEach(c => {
+            if (c) c.tokens = [];
+        });
+    }
+}
+
+// --- Interaction Manager ---
+function setCardInteractionState(target, state, value) {
+    const card = getCardRef(target);
+    if (!card) return;
+    
+    if (!card.interactionState) card.interactionState = {};
+    card.interactionState[state] = value;
+    
+    // UI updates will be handled by renderTable or specific UI update functions
+    // For now, we just update the state
+}
+
+function getCardInteractionState(target) {
+    const card = getCardRef(target);
+    return card && card.interactionState ? card.interactionState : {};
+}
+
+// --- Role Handler System ---
+class RoleHandler {
+    constructor(roleId) {
+        this.roleId = roleId;
+    }
+
+    /**
+     * Called when the role's turn starts.
+     * @param {Object} gameState - Current game state (players, centerCards, etc.)
+     * @returns {Object} - UI instructions or state updates
+     */
+    startTurn(gameState) {
+        return {
+            message: `Role ${this.roleId} turn started`,
+            canInteract: false
+        };
+    }
+
+    /**
+     * Called when a player interacts with a card (click/tap).
+     * @param {Object} gameState - Current game state
+     * @param {string} type - 'player' or 'center'
+     * @param {number} index - Index of the card
+     * @returns {boolean} - True if action was handled, false otherwise
+     */
+    handleAction(gameState, type, index) {
+        return false;
+    }
+
+    /**
+     * Called when the role's turn ends.
+     * @param {Object} gameState - Current game state
+     */
+    endTurn(gameState) {
+        // Cleanup
+    }
+    
+    /**
+     * Check if the turn is complete.
+     * @param {Object} gameState 
+     * @returns {boolean}
+     */
+    isTurnComplete(gameState) {
+        return true;
+    }
+}
+
+class SeerHandler extends RoleHandler {
+    constructor() {
+        super('seer');
+        this.actionState = {
+            viewedCount: 0,
+            viewedType: null // 'player' or 'center'
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            viewedCount: 0,
+            viewedType: null
+        };
+        
+        return {
+            message: i18n[currentLang].roleAction.seer || "Seer, view a player card or two center cards.",
+            canInteract: true
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // Prevent viewing self (if player) - Seer is usually a player
+        // But we need to know WHO is the Seer. 
+        // In the new system, the handler might not know the player index unless passed or stored.
+        // For now, let's assume validation happens or we check against currentNightRole.index
+        
+        if (this.actionState.viewedCount >= 2) return false;
+        if (this.actionState.viewedType === 'player' && this.actionState.viewedCount >= 1) return false;
+
+        if (type === 'player') {
+            // Seer cannot view shielded players
+            if (hasToken({type, index}, 'shield')) return false;
+            
+            if (this.actionState.viewedCount === 0) {
+                this.actionState.viewedType = 'player';
+                this.actionState.viewedCount++;
+                // Seer views the card - should reveal
+                return { handled: true, shouldReveal: true }; 
+            }
+        } else if (type === 'center') {
+            if (this.actionState.viewedCount === 0 || this.actionState.viewedType === 'center') {
+                this.actionState.viewedType = 'center';
+                this.actionState.viewedCount++;
+                return { handled: true, shouldReveal: true };
+            }
+        }
+        return false;
+    }
+    
+    isTurnComplete(gameState) {
+        if (this.actionState.viewedType === 'player' && this.actionState.viewedCount === 1) return true;
+        if (this.actionState.viewedType === 'center' && this.actionState.viewedCount === 2) return true;
+        return false; // Can end early if they want? Usually forced.
+    }
+}
+
+class RobberHandler extends RoleHandler {
+    constructor() {
+        super('robber');
+        this.actionState = {
+            step: 'select', // 'select' -> 'view'
+            targetIndex: -1,
+            selfShielded: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            step: 'select',
+            targetIndex: -1,
+            selfShielded: false
+        };
+        
+        // Check if Robber is shielded
+        const playerIdx = gameState.currentPlayerIndex;
+        if (hasToken({type: 'player', index: playerIdx}, 'shield')) {
+            this.actionState.selfShielded = true;
+            this.actionState.step = 'complete';
+            return {
+                message: (i18n[currentLang].roleAction.robber || "Robber, view a player card then swap with yours.") + " " + (i18n[currentLang].shieldBlocked || "You are shielded and cannot act."),
+                canInteract: false
+            };
+        }
+        
+        return {
+            message: i18n[currentLang].roleAction.robber || "Robber, view a player card then swap with yours.",
+            canInteract: true
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (type !== 'player') return false;
+        if (this.actionState.step !== 'select') return false;
+        
+        // Robber cannot rob shielded players
+        if (hasToken({type, index}, 'shield')) return false;
+        
+        const playerIdx = gameState.currentPlayerIndex;
+        if (index === playerIdx) return false; // Can't rob self
+        
+        this.actionState.targetIndex = index;
+        this.actionState.step = 'complete';
+        
+        // Perform Swap
+        const temp = gameState.playerRoles[playerIdx].roleId;
+        gameState.playerRoles[playerIdx].roleId = gameState.playerRoles[index].roleId;
+        gameState.playerRoles[index].roleId = temp;
+        
+        console.log(`[Robber] Swapped Player ${playerIdx} with Player ${index}`);
+        
+        // Robber sees their OWN card after swap (the new role they got)
+        // Need re-render to update card backs, then reveal Robber's position
+        return { 
+            handled: true, 
+            shouldReveal: true, 
+            needsRerender: true,
+            revealTarget: { type: 'player', index: playerIdx }
+        };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.step === 'complete';
+    }
+}
+
+class WerewolfHandler extends RoleHandler {
+    constructor() {
+        super('werewolf');
+        this.actionState = {
+            isLoneWolf: false,
+            viewedCenter: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            isLoneWolf: false,
+            viewedCenter: false
+        };
+        
+        // Check for other werewolves
+        const werewolves = gameState.playerRoles.filter(p => p.roles.actual === 'werewolf' || p.roles.actual === 'dreamwolf');
+        this.actionState.isLoneWolf = werewolves.length === 1;
+        
+        let message;
+        if (this.actionState.isLoneWolf) {
+            message = (i18n[currentLang].roleAction.werewolf || "Werewolves, wake up.") + " " + (i18n[currentLang].loneWolf || "You are alone. You may view one center card.");
+        } else {
+            message = i18n[currentLang].roleAction.werewolf || "Werewolves, wake up and look for other werewolves.";
+        }
+        
+        return {
+            message: message,
+            canInteract: this.actionState.isLoneWolf
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (!this.actionState.isLoneWolf) {
+            // Pack wolves might click, but it shouldn't trigger an action/error.
+            // Returning true means "handled" (even if nothing happens), preventing the warning.
+            // But if we return true, it might try to reveal the card in handleCardClick.
+            // We only want to allow revealing if it's a valid action.
+            // If we return false, it logs a warning.
+            // Pack wolves see each other because of `renderTable` highlighting.
+            // They don't need to click anything.
+            // If they click, suppress warning but don't reveal any card.
+            return { handled: true, shouldReveal: false }; 
+        }
+        
+        if (this.actionState.viewedCenter) return false;
+        
+        if (type === 'center') {
+            this.actionState.viewedCenter = true;
+            // Lone wolf views center card
+            return { handled: true, shouldReveal: true };
+        }
+        
+        return false;
+    }
+    
+    isTurnComplete(gameState) {
+        if (!this.actionState.isLoneWolf) return true; // Standard werewolves just look
+        return this.actionState.viewedCenter;
+    }
+}
+
+class ApprenticeSeerHandler extends RoleHandler {
+    constructor() {
+        super('apprenticeseer');
+        this.actionState = {
+            viewedCenter: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            viewedCenter: false
+        };
+        
+        return {
+            message: i18n[currentLang].roleAction.apprenticeseer || "Apprentice Seer, view one center card."
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (this.actionState.viewedCenter) return false;
+        if (type !== 'center') return false;
+
+        this.actionState.viewedCenter = true;
+        // Apprentice Seer views center card
+        return { handled: true, shouldReveal: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.viewedCenter;
+    }
+}
+
+class WitchHandler extends RoleHandler {
+    constructor() {
+        super('witch');
+        this.actionState = {
+            viewedCenter: false,
+            centerIndex: -1,
+            swapped: false,
+            selfShielded: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            viewedCenter: false,
+            centerIndex: -1,
+            swapped: false,
+            selfShielded: false
+        };
+        
+        // Check if Witch is shielded - but Witch can still act, just can't swap with self
+        const playerIdx = gameState.currentPlayerIndex;
+        if (hasToken({type: 'player', index: playerIdx}, 'shield')) {
+            this.actionState.selfShielded = true;
+        }
+        
+        return {
+            message: i18n[currentLang].roleAction.witch || "Witch, view a center card then swap it with any player."
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // Step 1: View Center Card
+        if (!this.actionState.viewedCenter) {
+            if (type !== 'center') return false;
+            
+            this.actionState.viewedCenter = true;
+            this.actionState.centerIndex = index;
+            
+            // Witch views center card first
+            return { handled: true, shouldReveal: true };
+        }
+        
+        // Step 2: Swap with Player
+        if (!this.actionState.swapped) {
+            if (type !== 'player') return false;
+            
+            // Witch cannot swap shielded players
+            if (hasToken({type, index}, 'shield')) return false;
+            
+            // Witch cannot swap with self if shielded
+            const currentPlayerIdx = gameState.currentPlayerIndex;
+            if (index === currentPlayerIdx && this.actionState.selfShielded) return false;
+            
+            const centerIdx = this.actionState.centerIndex;
+            const playerIdx = index;
+            
+            // Perform Swap
+            const temp = gameState.centerCards[centerIdx].roleId;
+            gameState.centerCards[centerIdx].roleId = gameState.playerRoles[playerIdx].roleId;
+            gameState.playerRoles[playerIdx].roleId = temp;
+            
+            this.actionState.swapped = true;
+            // Witch swaps but doesn't reveal the player's card, needs re-render
+            return { handled: true, shouldReveal: false, needsRerender: true };
+        }
+        
+        return false;
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.swapped;
+    }
+}
+
+class TroublemakerHandler extends RoleHandler {
+    constructor() {
+        super('troublemaker');
+        this.actionState = {
+            selection: [],
+            swapped: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            selection: [],
+            swapped: false
+        };
+        
+        return {
+            message: i18n[currentLang].roleAction.troublemaker || "Troublemaker, swap two players."
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (this.actionState.swapped) return false;
+        if (type !== 'player') return false;
+        
+        // Check if already selected
+        if (this.actionState.selection.some(s => s.index === index)) return false;
+        
+        // Troublemaker cannot swap shielded players
+        if (hasToken({type, index}, 'shield')) return false;
+        
+        this.actionState.selection.push({ type, index });
+        
+        if (this.actionState.selection.length === 2) {
+            const idx1 = this.actionState.selection[0].index;
+            const idx2 = this.actionState.selection[1].index;
+            
+            // Swap
+            const temp = gameState.playerRoles[idx1].roleId;
+            gameState.playerRoles[idx1].roleId = gameState.playerRoles[idx2].roleId;
+            gameState.playerRoles[idx2].roleId = temp;
+            
+            this.actionState.swapped = true;
+            // Troublemaker doesn't see the cards - just swaps, but needs re-render
+            return { handled: true, shouldReveal: false, needsRerender: true };
+        }
+        
+        // Selection accepted but not complete yet
+        return { handled: true, shouldReveal: false };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.swapped;
+    }
+}
+
+class DrunkHandler extends RoleHandler {
+    constructor() {
+        super('drunk');
+        this.actionState = {
+            swapped: false,
+            selfShielded: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            swapped: false,
+            selfShielded: false
+        };
+        
+        // Check if Drunk is shielded
+        const playerIdx = gameState.currentPlayerIndex;
+        if (hasToken({type: 'player', index: playerIdx}, 'shield')) {
+            this.actionState.selfShielded = true;
+            this.actionState.swapped = true; // Mark as complete
+            return {
+                message: (i18n[currentLang].roleAction.drunk || "Drunk, swap your card with a center card.") + " " + (i18n[currentLang].shieldBlocked || "你被盾牌保護，無法行動。"),
+                canInteract: false
+            };
+        }
+        
+        return {
+            message: i18n[currentLang].roleAction.drunk || "Drunk, swap your card with a center card."
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (this.actionState.swapped) return false;
+        if (type !== 'center') return false;
+        
+        const playerIdx = gameState.currentPlayerIndex;
+        if (playerIdx === -1) return false; // Should not happen
+        
+        // Swap (Drunk doesn't see the new card)
+        const temp = gameState.playerRoles[playerIdx].roleId;
+        gameState.playerRoles[playerIdx].roleId = gameState.centerCards[index].roleId;
+        gameState.centerCards[index].roleId = temp;
+        
+        this.actionState.swapped = true;
+        
+        // Return object to indicate: handled but don't reveal the card, needs re-render
+        return { handled: true, shouldReveal: false, needsRerender: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.swapped;
+    }
+}
+
+class InsomniacHandler extends RoleHandler {
+    constructor() {
+        super('insomniac');
+        this.actionState = {
+            viewedSelf: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            viewedSelf: false
+        };
+        
+        return {
+            message: i18n[currentLang].roleAction.insomniac || "Insomniac, view your own card."
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (this.actionState.viewedSelf) return false;
+        if (type !== 'player') return false;
+        
+        // Must view SELF
+        const playerIdx = gameState.currentPlayerIndex;
+        if (index !== playerIdx) return false;
+        
+        this.actionState.viewedSelf = true;
+        // Insomniac views their own card
+        return { handled: true, shouldReveal: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.viewedSelf;
+    }
+}
+
+class DoppelgangerHandler extends RoleHandler {
+    constructor() {
+        super('doppelganger');
+        this.actionState = {
+            viewed: false,
+            mimicId: null,
+            subHandler: null,
+            subState: null
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            viewed: false,
+            mimicId: null,
+            subHandler: null,
+            subState: null
+        };
+        
+        return {
+            message: i18n[currentLang].roleAction.doppelganger || "Doppelgänger, view another player's card."
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // If already mimicking and has sub-handler, delegate
+        if (this.actionState.subHandler) {
+            const result = this.actionState.subHandler.handleAction(gameState, type, index);
+            // Delegate returns the sub-handler's result directly
+            return result;
+        }
+        
+        // If already viewed but no sub-handler (passive role), do nothing
+        if (this.actionState.viewed) return false;
+        
+        // Step 1: View Player Card
+        if (type !== 'player') return false;
+        
+        // Can't view self
+        const playerIdx = gameState.currentPlayerIndex;
+        if (index === playerIdx) return false;
+        
+        // Doppelganger cannot view shielded players
+        if (hasToken({type, index}, 'shield')) return false;
+        
+        this.actionState.viewed = true;
+        
+        // Get Target Role
+        const targetRole = gameState.playerRoles[index].roleId;
+        this.actionState.mimicId = targetRole;
+        
+        // Update Doppelganger's Role
+        gameState.playerRoles[playerIdx].roleId = targetRole;
+        gameState.playerRoles[playerIdx].mimickedRole = targetRole;
+        
+        console.log(`[Doppelganger] Mimicking ${targetRole}`);
+        
+        // Initialize Sub-Handler if interactive
+        const handler = getRoleHandler(targetRole);
+        if (handler) {
+            this.actionState.subHandler = handler;
+            // We need to initialize the sub-handler
+            // Note: startTurn usually returns a message, we might want to log it or ignore it
+            // The sub-handler might need specific initialization based on game state
+            handler.startTurn(gameState);
+            
+            // IMPORTANT: Some handlers (like Werewolf) check for "Lone Wolf" in startTurn.
+            // We need to ensure the gameState reflects the Doppelganger as the new role?
+            // Yes, we updated playerRoles above, so it should be fine.
+        }
+        
+        // Doppelganger views target's card
+        return { handled: true, shouldReveal: true };
+    }
+
+    isTurnComplete(gameState) {
+        if (!this.actionState.viewed) return false;
+        
+        if (this.actionState.subHandler) {
+            return this.actionState.subHandler.isTurnComplete(gameState);
+        }
+        
+        return true; // Passive role mimic is complete after viewing
+    }
+}
+
+class MinionHandler extends RoleHandler {
+    constructor() {
+        super('minion');
+    }
+
+    startTurn(gameState) {
+        return {
+            message: i18n[currentLang].roleAction.minion || "Minion, wake up. Werewolves, stick out your thumb.",
+            canInteract: false
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // Minion doesn't interact - suppress warning for any clicks
+        return { handled: true, shouldReveal: false };
+    }
+
+    isTurnComplete(gameState) {
+        return true; // Always complete (timer based)
+    }
+}
+
+class SentinelHandler extends RoleHandler {
+    constructor() {
+        super('sentinel');
+        this.actionState = {
+            tokenPlaced: false
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            tokenPlaced: false
+        };
+        
+        return {
+            message: i18n[currentLang].roleAction.sentinel || "Sentinel, place a shield token on a player card.",
+            canInteract: true
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        if (this.actionState.tokenPlaced) return false;
+        if (type !== 'player') return false;
+        
+        // Place Shield Token
+        addToken({type, index}, 'shield');
+        this.actionState.tokenPlaced = true;
+        
+        console.log(`[Sentinel] Placed shield on Player ${index}`);
+        
+        // Return object to indicate: handled but don't reveal the card, needs re-render to show token
+        return { handled: true, shouldReveal: false, needsRerender: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.tokenPlaced;
+    }
+}
+
+class PIHandler extends RoleHandler {
+    constructor() {
+        super('pi');
+        this.actionState = {
+            viewedCount: 0,
+            transformed: false,
+            transformedTo: null,
+            viewedPlayers: [],
+            transformedCardIndex: null // The card that holds the transformation token
+        };
+    }
+
+    startTurn(gameState) {
+        // Reset actionState for new turn
+        this.actionState = {
+            viewedCount: 0,
+            transformed: false,
+            transformedTo: null,
+            viewedPlayers: [],
+            transformedCardIndex: null
+        };
+        
+        return {
+            message: i18n[currentLang]?.roleAction?.pi || "P.I., view up to 2 player cards. If you see a Werewolf, Minion, or Tanner, you become that role.",
+            canInteract: true
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // P.I. can only view player cards
+        if (type !== 'player') return false;
+        
+        // Cannot view after transformation
+        if (this.actionState.transformed) return false;
+        
+        // Cannot view more than 2 cards
+        if (this.actionState.viewedCount >= 2) return false;
+        
+        // Cannot view self
+        const playerIdx = gameState.currentPlayerIndex;
+        if (index === playerIdx) return false;
+        
+        // Cannot view same player twice
+        if (this.actionState.viewedPlayers.includes(index)) return false;
+        
+        // Cannot view shielded players
+        if (hasToken({type, index}, 'shield')) return false;
+        
+        // View the card
+        this.actionState.viewedCount++;
+        this.actionState.viewedPlayers.push(index);
+        
+        // Check if target is a role that triggers transformation
+        // Werewolf team: werewolf, minion, dreamwolf
+        // Independent: tanner
+        const targetRole = gameState.playerRoles[index].roleId;
+        const transformRoles = ['werewolf', 'minion', 'dreamwolf', 'tanner'];
+        
+        if (transformRoles.includes(targetRole)) {
+            // P.I. transforms - the transformation is bound to P.I.'s CARD (not player)
+            this.actionState.transformed = true;
+            this.actionState.transformedTo = targetRole;
+            this.actionState.transformedCardIndex = playerIdx; // P.I.'s card position
+            
+            console.log(`[P.I.] Card transformed into ${targetRole} after viewing Player ${index}`);
+        }
+        
+        return { handled: true, shouldReveal: true };
+    }
+
+    isTurnComplete(gameState) {
+        // Complete if transformed OR viewed 2 cards
+        return this.actionState.transformed || this.actionState.viewedCount >= 2;
+    }
+}
+
+class MysticWolfHandler extends RoleHandler {
+    constructor() {
+        super('mysticwolf');
+        this.actionState = {
+            hasViewed: false,
+            viewedPlayerIndex: null
+        };
+    }
+
+    startTurn(gameState) {
+        this.actionState = {
+            hasViewed: false,
+            viewedPlayerIndex: null
+        };
+        
+        return {
+            message: i18n[currentLang]?.roleAction?.mysticwolf || "Mystic Wolf, you may look at one other player's card.",
+            canInteract: true
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // Already viewed
+        if (this.actionState.hasViewed) return false;
+        
+        // Can only view player cards
+        if (type !== 'player') return false;
+        
+        // Cannot view self
+        const playerIdx = gameState.currentPlayerIndex;
+        if (index === playerIdx) return false;
+        
+        // Cannot view shielded players
+        if (hasToken({ type, index }, 'shield')) return false;
+        
+        // View the card
+        this.actionState.hasViewed = true;
+        this.actionState.viewedPlayerIndex = index;
+        
+        console.log(`[Mystic Wolf] Viewed Player ${index}'s card`);
+        
+        return { handled: true, shouldReveal: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.hasViewed;
+    }
+}
+
+class RevealerHandler extends RoleHandler {
+    constructor() {
+        super('revealer');
+        this.actionState = {
+            hasRevealed: false,
+            revealedPlayerIndex: null,
+            shouldStayRevealed: false
+        };
+    }
+
+    startTurn(gameState) {
+        this.actionState = {
+            hasRevealed: false,
+            revealedPlayerIndex: null,
+            shouldStayRevealed: false
+        };
+        
+        return {
+            message: i18n[currentLang]?.roleAction?.revealer || "Revealer, flip one player's card face up.",
+            canInteract: true
+        };
+    }
+
+    handleAction(gameState, type, index) {
+        // Already revealed
+        if (this.actionState.hasRevealed) return false;
+        
+        // Can only reveal player cards
+        if (type !== 'player') return false;
+        
+        // Cannot reveal self
+        const playerIdx = gameState.currentPlayerIndex;
+        if (index === playerIdx) return false;
+        
+        // Cannot reveal shielded players
+        if (hasToken({ type, index }, 'shield')) return false;
+        
+        // Reveal the card
+        this.actionState.hasRevealed = true;
+        this.actionState.revealedPlayerIndex = index;
+        
+        // Check if card should stay revealed (village team only)
+        const targetRole = gameState.playerRoles[index].roleId;
+        const nonVillageRoles = ['werewolf', 'minion', 'tanner', 'dreamwolf', 'mysticwolf'];
+        
+        if (nonVillageRoles.includes(targetRole)) {
+            // Werewolf/Tanner - flip back down (Revealer sees it but others don't)
+            this.actionState.shouldStayRevealed = false;
+            console.log(`[Revealer] Revealed Player ${index} (${targetRole}) - flipping back down`);
+        } else {
+            // Village team - stays revealed for everyone
+            this.actionState.shouldStayRevealed = true;
+            console.log(`[Revealer] Revealed Player ${index} (${targetRole}) - stays revealed`);
+        }
+        
+        return { handled: true, shouldReveal: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.hasRevealed;
+    }
+}
+
+// --- Role Handler Registry ---
+const roleHandlers = {
+    'seer': new SeerHandler(),
+    'robber': new RobberHandler(),
+    'werewolf': new WerewolfHandler(),
+    'apprenticeseer': new ApprenticeSeerHandler(),
+    'witch': new WitchHandler(),
+    'troublemaker': new TroublemakerHandler(),
+    'drunk': new DrunkHandler(),
+    'insomniac': new InsomniacHandler(),
+    'doppelganger': new DoppelgangerHandler(),
+    'minion': new MinionHandler(),
+    'sentinel': new SentinelHandler(),
+    'pi': new PIHandler(),
+    'mysticwolf': new MysticWolfHandler(),
+    'revealer': new RevealerHandler()
+};
+
+// Helper function to get handler for a role
+function getRoleHandler(roleId) {
+    return roleHandlers[roleId] || null;
+}
+
+function getCardRef(target) {
+    if (target.type === 'player') {
+        return playerRoles[target.index];
+    } else if (target.type === 'center') {
+        return centerCards[target.index];
+    }
+    return null;
+}
+
+function validateGameState() {
+    const errors = [];
+    const validRoleIds = rolesData.map(r => r.id);
+    
+    // Check Players
+    playerRoles.forEach((p, i) => {
+        if (!p.roles || !p.roles.actual) {
+            errors.push(`Player ${i} has no role`);
+            return;
+        }
+        if (!validRoleIds.includes(p.roles.actual)) {
+            errors.push(`Invalid role ID: ${p.roles.actual} for Player ${i}`);
+        }
+    });
+    
+    // Check Center Cards
+    centerCards.forEach((c, i) => {
+        if (!c.roleId) {
+            errors.push(`Center Card ${i} has no role`);
+            return;
+        }
+        if (!validRoleIds.includes(c.roleId)) {
+            errors.push(`Invalid role ID: ${c.roleId} for Center Card ${i}`);
+        }
+    });
+    
+    return {
+        valid: errors.length === 0,
+        errors: errors
+    };
+}
+
+function updatePlayerRole(playerIndex, newRole, options = {}) {
+    const {
+        perceived = false,      // Does the player know about this change?
+        event = 'unknown',      // Event type
+        source = null,          // Source (role/player causing change)
+        target = null,          // Target (if applicable)
+        transformCard = false   // Is the card itself transformed (e.g. P.I.)
+    } = options;
+    
+    // In the new architecture, playerRoles[playerIndex] is the player object
+    // But we need to be careful if we are in the middle of migration
+    // The test mocks `players` global, but script.js uses `playerRoles` for game state.
+    // However, my test uses `global.players` which mimics `playerRoles` in the new structure?
+    // Wait, the test mocks `global.players` as the array of player objects.
+    // In script.js, `playerRoles` IS the array of player objects (with roles).
+    // So I should use `playerRoles` here.
+    
+    // But wait, the test file `__tests__/playerRole.test.js` sets `global.players` and expects `updatePlayerRole` to modify it?
+    // Let's check the test again.
+    // The test calls `updatePlayerRole(0, ...)`
+    // And expects `global.players[0].roles.actual` to change.
+    
+    // In script.js, `playerRoles` is the main state array.
+    // But `players` is just setup info.
+    // I should probably use `playerRoles` in `updatePlayerRole`.
+    
+    // However, for the test to pass, `updatePlayerRole` needs to operate on whatever the test set up.
+    // The test set up `global.players`.
+    // If `updatePlayerRole` uses `playerRoles`, I need to mock `playerRoles` in the test too.
+    // In my test file I did: `global.players = [...]` and `global.playerRoles = []`.
+    
+    // Let's look at the test file content again (Step 1210).
+    // `global.players = [ { ... roles: ... } ]`
+    // `global.playerRoles = []`
+    
+    // If I implement `updatePlayerRole` to use `playerRoles`, the test will fail because it populates `players`.
+    // I should update the test to populate `playerRoles` instead, OR update `updatePlayerRole` to use `players`?
+    // No, `playerRoles` is the correct game state variable in `script.js`.
+    // So I should fix the test to populate `playerRoles` instead of `players`.
+    
+    // BUT, I can't fix the test right now without a separate tool call.
+    // I should implement `updatePlayerRole` correctly (using `playerRoles`) and then fix the test if it fails.
+    // Actually, looking at `script.js`, `playerRoles` is the one holding the role state.
+    
+    // Let's implement it using `playerRoles`.
+    
+    const player = playerRoles[playerIndex];
+    if (!player) return;
+    
+    const oldRole = player.roles.actual;
+    
+    // Update actual role
+    player.roles.actual = newRole;
+    
+    // Update perceived role if player knows
+    if (perceived) {
+        player.roles.perceived = newRole;
+    }
+    
+    // Update backward compatibility property if needed (setter handles it, but just in case)
+    // player.roleId = newRole; // The setter I defined earlier does this: this.roles.actual = value
+    
+    // Record history
+    if (player.roleHistory) {
+        player.roleHistory.push({
+            timestamp: Date.now(),
+            event: event,
+            from: oldRole,
+            to: newRole,
+            perceived: perceived,
+            source: source,
+            target: target
+        });
+    }
+    
+    console.log(`[Role Update] Player ${playerIndex}: ${oldRole} -> ${newRole} (perceived: ${perceived})`);
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
 function animateSwap(card1, card2) {
     if (!card1 || !card2) return;
@@ -2184,4 +3244,52 @@ function animateSwap(card1, card2) {
         card1.classList.remove('swapping');
         card2.classList.remove('swapping');
     }, 1000);
+}
+
+// 測試環境導出
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        // Core functions to test
+        init,
+        initGame,
+        initSetup,
+        
+        // Helper functions
+        shuffleArray,
+        
+        // Game Logic functions (will add more as we refactor)
+        updatePlayerRole, 
+        swapCards,
+        validateGameState,
+        
+        // Token & Interaction
+        addToken, removeToken, hasToken, clearAllTokens,
+        setCardInteractionState, getCardInteractionState,
+        
+        // UI Helpers
+        createCard,
+        
+        // Role Handlers
+        RoleHandler,
+        SeerHandler,
+        RobberHandler,
+        WerewolfHandler,
+        ApprenticeSeerHandler,
+        WitchHandler,
+        TroublemakerHandler,
+        DrunkHandler,
+        InsomniacHandler,
+        DoppelgangerHandler,
+        SentinelHandler,
+        MinionHandler,
+        PIHandler,
+        MysticWolfHandler,
+        RevealerHandler,
+        
+        // Test Helpers
+        setPlayerRoles: (roles) => { playerRoles = roles; },
+        getPlayerRoles: () => playerRoles,
+        setCenterCards: (cards) => { centerCards = cards; },
+        getCenterCards: () => centerCards,
+    };
 }

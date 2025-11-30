@@ -116,6 +116,34 @@
    - 原因：`renderTable` 邏輯假設 `instructionBanner` 不存在時才建立按鈕，但 `desktop.html` 已有 banner 導致跳過建立
    - 已修正：直接在 `desktop.html` 加入按鈕，確保其存在
 
+### ✅ 2025-11-30: Handler 系統重構
+
+#### 完成項目
+
+1. **統一 Handler 返回值格式**
+   - 所有 Handler 嘅 `handleAction()` 改為返回 `{handled: boolean, shouldReveal: boolean}` object
+   - `handleCardClick()` 已支援 object 返回值，根據 `shouldReveal` 決定係咪翻牌
+
+2. **加入 actionState Reset 邏輯**
+   - 每個 Handler 嘅 `startTurn()` 會重置 `actionState`
+   - 避免連續遊戲或 Doppelganger 複製時狀態殘留
+
+3. **補充 Shield Token 測試**
+   - Witch 無法交換被盾嘅玩家
+   - Witch 自己被盾時無法同自己交換
+   - Drunk 被盾時無法行動
+   - Insomniac 即使被盾都可以睇自己張牌
+   - Doppelganger 無法查看被盾嘅玩家
+
+4. **修復 Doppelganger Shield 檢查**
+   - Doppelganger 現在會檢查目標係咪有 Shield Token
+
+#### 測試結果
+
+- **總測試數**: 65
+- **通過**: 65
+- **失敗**: 0
+
 ### 🔄 進行中 (In Progress)
 
 - [ ] 實現其他 Daybreak 角色（Paranormal Investigator 等）
@@ -129,16 +157,18 @@
 5. ~~優化 Mobile UI~~ ✅
 6. ~~完成 Dream Wolf 語音提示~~ ✅
 7. ~~實現 Witch (女巫)~~ ✅
-8. 實現其他 Daybreak 角色（Paranormal Investigator 等）
+8. ~~實現 Sentinel (守衞)~~ ✅
+9. ~~Handler 系統重構~~ ✅
+10. 實現其他 Daybreak 角色（Paranormal Investigator 等）
 
 ## 備註 (Notes)
 
 - 所有 Game Logic (Night Phase, Day Phase, Voting 等) 保持不變
 - Desktop 和 Mobile 只是 UI/Layout 不同，邏輯完全共用
 - `localStorage` key: `happywolf_save`
-- 新增角色圖片：`DreamWolf.png`, `ApprenticeSeer.png`, `Witch.png`
+- 新增角色圖片：`DreamWolf.png`, `ApprenticeSeer.png`, `Witch.png`, `Sentinel.jpg`
 
 ---
 
-**最後更新**: 2025-11-23 13:25
-**狀態**: ✅ 角色實現完成 (Roles Implemented)
+**最後更新**: 2025-11-30 
+**狀態**: ✅ Handler 系統重構完成
