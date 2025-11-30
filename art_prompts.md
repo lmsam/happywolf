@@ -175,6 +175,13 @@ The game uses two primary card display formats:
 
 > An armored anime guardian standing firm with a massive tower shield, blocking a dark energy attack, glowing blue forcefield effect, determined grit teeth expression, metallic armor texture, sparks flying, Shonen anime style, ultimate defense.
 
+### 20. Mystic Wolf (神秘狼)
+
+**Concept:** A cunning werewolf with psychic abilities.
+**Prompt:**
+
+> A sleek anime werewolf with glowing purple eyes and mystical third eye on forehead, one clawed hand touching a transparent vision sphere showing another character's face, dark fur with arcane rune markings, mysterious fog swirling around, deep purple and indigo aura, combining wolf ferocity with psychic elegance, Shonen anime style, knowing smirk, intelligence meets primal power.
+
 ---
 
 ## Technical Settings (for Midjourney)

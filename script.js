@@ -267,7 +267,7 @@ const rolesData = [
         desc: { 'zh-HK': '狼人陣營。狼人回合後，可以睇一張其他玩家嘅牌。', 'en-US': 'Werewolf team. After werewolf phase, look at one other player\'s card.' },
         tips: { 'zh-HK': '可以扮 Robber 話自己搶咗嗰個人嘅牌！', 'en-US': 'Claim Robber and say you stole the card you viewed!' },
         team: 'werewolf',
-        wakeOrder: 2.5, duration: 10, 
+        wakeOrder: 4.5, duration: 10, 
         scriptStart: { 'zh-HK': '神秘狼請擘大眼，你可以睇一張其他玩家嘅牌', 'en-US': 'Mystic Wolf, wake up. You may look at one other player\'s card.' },
         scriptEnd: { 'zh-HK': '神秘狼請閉眼', 'en-US': 'Mystic Wolf, close your eyes.' }
     },
@@ -449,7 +449,15 @@ const roleImageMap = {
 
 function renderLibrary() {
     libraryGrid.innerHTML = '';
-    rolesData.forEach(role => {
+    
+    // Sort roles by wakeOrder for display (non-waking roles like villager go to the end)
+    const sortedRoles = [...rolesData].sort((a, b) => {
+        const orderA = a.wakeOrder === -1 ? 999 : a.wakeOrder;
+        const orderB = b.wakeOrder === -1 ? 999 : b.wakeOrder;
+        return orderA - orderB;
+    });
+    
+    sortedRoles.forEach(role => {
         const div = document.createElement('div');
         div.className = 'role-card';
         const imageFile = roleImageMap[role.id] || 'Villager.png';
