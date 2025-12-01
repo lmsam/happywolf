@@ -1750,6 +1750,34 @@ function loadGameState() {
         currentPeekIndex = state.currentPeekIndex;
         currentLang = state.currentLang;
         
+        // Re-attach getters for backward compatibility (lost during JSON serialization)
+        playerRoles.forEach(player => {
+            // Only define if not already defined (defensive)
+            if (!Object.getOwnPropertyDescriptor(player, 'roleId')?.get) {
+                Object.defineProperty(player, 'roleId', {
+                    get() { return this.roles.actual; },
+                    set(value) { this.roles.actual = value; },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+            if (!Object.getOwnPropertyDescriptor(player, 'initialRoleId')?.get) {
+                Object.defineProperty(player, 'initialRoleId', {
+                    get() { return this.roles.initial; },
+                    set(value) { this.roles.initial = value; },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+            if (!Object.getOwnPropertyDescriptor(player, 'playerId')?.get) {
+                Object.defineProperty(player, 'playerId', {
+                    get() { return this.id; },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+        });
+        
         // Restore Day Duration safely
         if (state.dayDuration) {
             window.savedDayDuration = state.dayDuration; // Store in memory for mobile/desktop
