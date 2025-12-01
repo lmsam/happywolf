@@ -1573,13 +1573,13 @@ function createCard(type, index, label) {
          }
          
          if (activeRoleId === 'werewolf' && type === 'player') {
-              if (playerRoles[index].initialRoleId === 'werewolf' || playerRoles[index].initialRoleId === 'dreamwolf' || playerRoles[index].mimickedRole === 'werewolf') {
+              if (playerRoles[index].initialRoleId === 'werewolf' || playerRoles[index].initialRoleId === 'dreamwolf' || playerRoles[index].initialRoleId === 'mysticwolf' || playerRoles[index].mimickedRole === 'werewolf') {
                   shouldHighlight = true;
               }
          }
          
          if (activeRoleId === 'werewolf' && type === 'center') {
-             const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.mimickedRole === 'werewolf').length;
+             const werewolfCount = playerRoles.filter(p => p.initialRoleId === 'werewolf' || p.initialRoleId === 'dreamwolf' || p.initialRoleId === 'mysticwolf' || p.mimickedRole === 'werewolf').length;
              if (werewolfCount === 1) shouldHighlight = true;
          }
          
