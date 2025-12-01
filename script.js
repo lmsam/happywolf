@@ -2495,10 +2495,11 @@ class WerewolfHandler extends RoleHandler {
         };
         
         // Check for other werewolves (includes werewolf, dreamwolf, mysticwolf)
+        // Use initialRoleId because players act based on their ORIGINAL role, not current card
         const werewolves = gameState.playerRoles.filter(p => 
-            p.roles.actual === 'werewolf' || 
-            p.roles.actual === 'dreamwolf' || 
-            p.roles.actual === 'mysticwolf'
+            p.initialRoleId === 'werewolf' || 
+            p.initialRoleId === 'dreamwolf' || 
+            p.initialRoleId === 'mysticwolf'
         );
         this.actionState.isLoneWolf = werewolves.length === 1;
         

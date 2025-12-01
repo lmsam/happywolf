@@ -220,8 +220,8 @@ describe('WerewolfHandler', () => {
 
     test('should identify as Lone Wolf if only 1 werewolf', () => {
         mockGameState.playerRoles = [
-            { roles: { actual: 'werewolf' } },
-            { roles: { actual: 'villager' } }
+            { initialRoleId: 'werewolf' },
+            { initialRoleId: 'villager' }
         ];
         
         const result = handler.startTurn(mockGameState);
@@ -231,8 +231,8 @@ describe('WerewolfHandler', () => {
 
     test('should NOT identify as Lone Wolf if multiple werewolves', () => {
         mockGameState.playerRoles = [
-            { roles: { actual: 'werewolf' } },
-            { roles: { actual: 'werewolf' } }
+            { initialRoleId: 'werewolf' },
+            { initialRoleId: 'werewolf' }
         ];
         
         const result = handler.startTurn(mockGameState);
@@ -242,7 +242,7 @@ describe('WerewolfHandler', () => {
     
     test('Lone Wolf should be able to view 1 center card', () => {
         mockGameState.playerRoles = [
-            { roles: { actual: 'werewolf' } }
+            { initialRoleId: 'werewolf' }
         ];
         handler.startTurn(mockGameState);
         
@@ -256,9 +256,9 @@ describe('WerewolfHandler', () => {
         const handler = new WerewolfHandler();
         const gameState = {
             playerRoles: [
-                { roles: { actual: 'werewolf' } },
-                { roles: { actual: 'werewolf' } },
-                { roles: { actual: 'villager' } }
+                { initialRoleId: 'werewolf' },
+                { initialRoleId: 'werewolf' },
+                { initialRoleId: 'villager' }
             ]
         };
         
@@ -274,9 +274,9 @@ describe('WerewolfHandler', () => {
         const handler = new WerewolfHandler();
         const gameState = {
             playerRoles: [
-                { roles: { actual: 'werewolf' } },
-                { roles: { actual: 'mysticwolf' } },
-                { roles: { actual: 'villager' } }
+                { initialRoleId: 'werewolf' },
+                { initialRoleId: 'mysticwolf' },
+                { initialRoleId: 'villager' }
             ]
         };
         
@@ -289,9 +289,9 @@ describe('WerewolfHandler', () => {
         const handler = new WerewolfHandler();
         const gameState = {
             playerRoles: [
-                { roles: { actual: 'werewolf' } },
-                { roles: { actual: 'dreamwolf' } },
-                { roles: { actual: 'villager' } }
+                { initialRoleId: 'werewolf' },
+                { initialRoleId: 'dreamwolf' },
+                { initialRoleId: 'villager' }
             ]
         };
         
@@ -302,21 +302,16 @@ describe('WerewolfHandler', () => {
     
     test('Mystic Wolf should be recognized as lone wolf when alone', () => {
         const handler = new WerewolfHandler();
-        // Simulate a werewolf player whose actual role is mysticwolf (swapped)
-        // Actually this tests when a werewolf counts mysticwolf as wolf team
-        // The werewolf handler checks playerRoles.actual
+        // Test: only mysticwolf in game = lone wolf from mysticwolf's POV
+        // Uses initialRoleId because players act based on their ORIGINAL role
         const gameState = {
             playerRoles: [
-                { roles: { actual: 'mysticwolf' } },
-                { roles: { actual: 'villager' } },
-                { roles: { actual: 'seer' } }
+                { initialRoleId: 'mysticwolf' },
+                { initialRoleId: 'villager' },
+                { initialRoleId: 'seer' }
             ]
         };
         
-        // A werewolf player checking - should see mysticwolf as a wolf
-        // Wait, this needs to be from werewolf perspective
-        // If a regular werewolf is checking - mysticwolf should be counted
-        // Let's test: only mysticwolf in game = lone wolf from mysticwolf's POV
         const result = handler.startTurn(gameState);
         // Only 1 wolf team member (mysticwolf), so isLoneWolf = true
         expect(handler.actionState.isLoneWolf).toBe(true);
