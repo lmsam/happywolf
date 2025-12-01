@@ -203,6 +203,26 @@ describe('RobberHandler', () => {
     test('should not allow selecting center card', () => {
         expect(handler.handleAction(mockGameState, 'center', 0)).toBe(false);
     });
+    
+    test('should swap tokens along with roles', () => {
+        // Setup: Player 1 (P.I.) has pi-transformed-werewolf token
+        mockGameState.playerRoles = [
+            { roleId: 'robber', tokens: [] },
+            { roleId: 'pi', tokens: ['pi-transformed-werewolf'] }
+        ];
+        mockGameState.currentPlayerIndex = 0;
+        
+        handler.startTurn(mockGameState);
+        handler.handleAction(mockGameState, 'player', 1);
+        
+        // After swap:
+        // - Player 0 (Robber) should now have P.I. role AND the token
+        // - Player 1 should have Robber role and no tokens
+        expect(mockGameState.playerRoles[0].roleId).toBe('pi');
+        expect(mockGameState.playerRoles[0].tokens).toContain('pi-transformed-werewolf');
+        expect(mockGameState.playerRoles[1].roleId).toBe('robber');
+        expect(mockGameState.playerRoles[1].tokens).toEqual([]);
+    });
 });
 
 

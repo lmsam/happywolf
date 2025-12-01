@@ -51,7 +51,7 @@ const i18n = {
             robber: "強盜，請查看一位玩家的卡牌，然後與你的卡牌交換。",
             minion: "爪牙，請確認狼人身份。",
             sentinel: "守衛，請將盾牌標記放在一位玩家的卡牌上。",
-            pi: "偵探，請查看最多兩張玩家卡牌。如果你睻到狼人或爪牙，你會變成該角色。",
+            pi: "偵探，請查看最多兩張玩家卡牌。如果你睇到狼人或爪牙，你會變成該角色。",
             mysticwolf: "神秘狼，你可以睇一張其他玩家嘅牌。",
             revealer: "揭示者，翻開一張玩家牌。如果係狼人或皮匠，要翻返落面。"
         },
@@ -2484,10 +2484,15 @@ class RobberHandler extends RoleHandler {
         this.actionState.targetIndex = index;
         this.actionState.step = 'complete';
         
-        // Perform Swap
-        const temp = gameState.playerRoles[playerIdx].roleId;
+        // Perform Swap - swap both roleId AND tokens
+        const tempRole = gameState.playerRoles[playerIdx].roleId;
+        const tempTokens = gameState.playerRoles[playerIdx].tokens || [];
+        
         gameState.playerRoles[playerIdx].roleId = gameState.playerRoles[index].roleId;
-        gameState.playerRoles[index].roleId = temp;
+        gameState.playerRoles[playerIdx].tokens = gameState.playerRoles[index].tokens || [];
+        
+        gameState.playerRoles[index].roleId = tempRole;
+        gameState.playerRoles[index].tokens = tempTokens;
         
         console.log(`[Robber] Swapped Player ${playerIdx} with Player ${index}`);
         
@@ -2533,9 +2538,9 @@ class WerewolfHandler extends RoleHandler {
         
         let message;
         if (this.actionState.isLoneWolf) {
-            message = (i18n[currentLang].roleAction.werewolf || "Werewolves, wake up.") + " " + (i18n[currentLang].loneWolf || "You are alone. You may view one center card.");
+            message = i18n[currentLang].loneWolf || "You are alone. You may view one center card.";
         } else {
-            message = i18n[currentLang].roleAction.werewolf || "Werewolves, wake up and look for other werewolves.";
+            message = i18n[currentLang].werewolf || "Werewolves, wake up and look for other werewolves.";
         }
         
         return {
