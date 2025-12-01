@@ -620,7 +620,10 @@ describe('DoppelgangerHandler', () => {
         handler.startTurn(gameState);
         const result = handler.handleAction(gameState, 'player', 1);
         
-        expect(result).toEqual({ handled: true, shouldReveal: true });
+        // Result includes nextMessage for interactive roles
+        expect(result.handled).toBe(true);
+        expect(result.shouldReveal).toBe(true);
+        expect(result.nextMessage).toBeDefined(); // Seer is interactive, so nextMessage exists
         expect(handler.actionState.viewed).toBe(true);
         expect(handler.actionState.mimicId).toBe('seer');
         
@@ -658,5 +661,354 @@ describe('DoppelgangerHandler', () => {
         // Verify Swap (Robber Logic)
         expect(gameState.playerRoles[0].roleId).toBe('villager');
         expect(gameState.playerRoles[2].roleId).toBe('robber');
+    });
+    
+    test('should delegate Seer action (view player card)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'seer', initialRoleId: 'seer' },
+                { roleId: 'villager', initialRoleId: 'villager' }
+            ],
+            centerCards: [{ roleId: 'werewolf' }, { roleId: 'robber' }, { roleId: 'tanner' }],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Seer
+        
+        // Now act as Seer - view a player card
+        const result = handler.handleAction(gameState, 'player', 2);
+        expect(result).toEqual({ handled: true, shouldReveal: true });
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should delegate Seer action (view 2 center cards)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'seer', initialRoleId: 'seer' }
+            ],
+            centerCards: [{ roleId: 'werewolf' }, { roleId: 'robber' }, { roleId: 'tanner' }],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Seer
+        
+        // View first center card
+        handler.handleAction(gameState, 'center', 0);
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        // View second center card
+        const result = handler.handleAction(gameState, 'center', 1);
+        expect(result).toEqual({ handled: true, shouldReveal: true });
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should delegate Apprentice Seer action (view 1 center card)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'apprenticeseer', initialRoleId: 'apprenticeseer' }
+            ],
+            centerCards: [{ roleId: 'werewolf' }, { roleId: 'robber' }, { roleId: 'tanner' }],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Apprentice Seer
+        
+        const result = handler.handleAction(gameState, 'center', 0);
+        expect(result).toEqual({ handled: true, shouldReveal: true });
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should delegate Troublemaker action (swap 2 players)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'troublemaker', initialRoleId: 'troublemaker' },
+                { roleId: 'villager', initialRoleId: 'villager' },
+                { roleId: 'werewolf', initialRoleId: 'werewolf' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Troublemaker
+        
+        // Swap player 2 and 3
+        handler.handleAction(gameState, 'player', 2);
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        handler.handleAction(gameState, 'player', 3);
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+        
+        // Verify swap
+        expect(gameState.playerRoles[2].roleId).toBe('werewolf');
+        expect(gameState.playerRoles[3].roleId).toBe('villager');
+    });
+    
+    test('should delegate Drunk action (swap with center)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'drunk', initialRoleId: 'drunk' }
+            ],
+            centerCards: [{ roleId: 'werewolf' }, { roleId: 'robber' }, { roleId: 'tanner' }],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Drunk
+        
+        const result = handler.handleAction(gameState, 'center', 0);
+        expect(result).toEqual({ handled: true, shouldReveal: false, needsRerender: true });
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+        
+        // Verify swap - Doppelganger (who became Drunk) swaps with center
+        expect(gameState.playerRoles[0].roleId).toBe('werewolf');
+        expect(gameState.centerCards[0].roleId).toBe('drunk');
+    });
+    
+    test('should delegate Insomniac action (view own card)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'insomniac', initialRoleId: 'insomniac' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Insomniac
+        
+        // Insomniac views own card (player 0)
+        const result = handler.handleAction(gameState, 'player', 0);
+        expect(result).toEqual({ handled: true, shouldReveal: true });
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should complete turn immediately when mimicking passive role (Villager)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'villager', initialRoleId: 'villager' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Villager
+        
+        // Villager has no handler, turn completes immediately
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should complete turn immediately when mimicking passive role (Minion)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'minion', initialRoleId: 'minion' },
+                { roleId: 'werewolf', initialRoleId: 'werewolf' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Minion
+        
+        // Minion is passive (just views werewolves), turn should complete
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should complete turn immediately when mimicking passive role (Tanner)', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'tanner', initialRoleId: 'tanner' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Tanner
+        
+        // Tanner has no handler, turn completes immediately
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should delegate Witch action (view center then swap with player)', () => {
+        const { setPlayerRoles, setCenterCards, getPlayerRoles, getCenterCards } = require('../script');
+        const handler = new DoppelgangerHandler();
+        
+        setPlayerRoles([
+            { roleId: 'doppelganger', initialRoleId: 'doppelganger', tokens: [] },
+            { roleId: 'witch', initialRoleId: 'witch', tokens: [] },
+            { roleId: 'villager', initialRoleId: 'villager', tokens: [] }
+        ]);
+        setCenterCards([
+            { roleId: 'werewolf' },
+            { roleId: 'robber' },
+            { roleId: 'tanner' }
+        ]);
+        
+        const gameState = {
+            playerRoles: getPlayerRoles(),
+            centerCards: getCenterCards(),
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Witch
+        
+        expect(handler.actionState.mimicId).toBe('witch');
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        // View center card
+        handler.handleAction(gameState, 'center', 0);
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        // Swap viewed center card with player 2
+        handler.handleAction(gameState, 'player', 2);
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+        
+        // Verify swap
+        expect(getPlayerRoles()[2].roleId).toBe('werewolf');
+        expect(getCenterCards()[0].roleId).toBe('villager');
+    });
+    
+    test('should delegate Sentinel action (place shield token)', () => {
+        const { setPlayerRoles, getPlayerRoles, hasToken } = require('../script');
+        const handler = new DoppelgangerHandler();
+        
+        setPlayerRoles([
+            { roleId: 'doppelganger', initialRoleId: 'doppelganger', tokens: [] },
+            { roleId: 'sentinel', initialRoleId: 'sentinel', tokens: [] },
+            { roleId: 'villager', initialRoleId: 'villager', tokens: [] }
+        ]);
+        
+        const gameState = {
+            playerRoles: getPlayerRoles(),
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Sentinel
+        
+        expect(handler.actionState.mimicId).toBe('sentinel');
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        // Place shield on player 2
+        handler.handleAction(gameState, 'player', 2);
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+        
+        // Verify shield token
+        expect(hasToken({ type: 'player', index: 2 }, 'shield')).toBe(true);
+    });
+    
+    test('should delegate Mystic Wolf action (view one player card)', () => {
+        const { setPlayerRoles, getPlayerRoles } = require('../script');
+        const handler = new DoppelgangerHandler();
+        
+        setPlayerRoles([
+            { roleId: 'doppelganger', initialRoleId: 'doppelganger', tokens: [] },
+            { roleId: 'mysticwolf', initialRoleId: 'mysticwolf', tokens: [] },
+            { roleId: 'villager', initialRoleId: 'villager', tokens: [] }
+        ]);
+        
+        const gameState = {
+            playerRoles: getPlayerRoles(),
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Mystic Wolf
+        
+        expect(handler.actionState.mimicId).toBe('mysticwolf');
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        // View player 2's card
+        const result = handler.handleAction(gameState, 'player', 2);
+        expect(result).toEqual({ handled: true, shouldReveal: true });
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+    });
+    
+    test('should delegate Revealer action (reveal one player card)', () => {
+        const { setPlayerRoles, getPlayerRoles, hasToken } = require('../script');
+        const handler = new DoppelgangerHandler();
+        
+        setPlayerRoles([
+            { roleId: 'doppelganger', initialRoleId: 'doppelganger', tokens: [] },
+            { roleId: 'revealer', initialRoleId: 'revealer', tokens: [] },
+            { roleId: 'villager', initialRoleId: 'villager', tokens: [] }
+        ]);
+        
+        const gameState = {
+            playerRoles: getPlayerRoles(),
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        handler.handleAction(gameState, 'player', 1); // Mimic Revealer
+        
+        expect(handler.actionState.mimicId).toBe('revealer');
+        expect(handler.isTurnComplete(gameState)).toBe(false);
+        
+        // Reveal player 2's card (villager - stays revealed)
+        const result = handler.handleAction(gameState, 'player', 2);
+        expect(result.handled).toBe(true);
+        expect(result.shouldReveal).toBe(true);
+        expect(handler.isTurnComplete(gameState)).toBe(true);
+        
+        // Revealer handler should mark card as should stay revealed (village team)
+        expect(handler.actionState.subHandler.actionState.shouldStayRevealed).toBe(true);
+    });
+    
+    test('should return nextMessage when mimicking interactive role', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'robber', initialRoleId: 'robber' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        const result = handler.handleAction(gameState, 'player', 1);
+        
+        // Should have nextMessage for Robber's follow-up action
+        expect(result.handled).toBe(true);
+        expect(result.nextMessage).toBeDefined();
+        expect(result.nextMessage.length).toBeGreaterThan(0);
+    });
+    
+    test('should return nextMessage=null when mimicking passive role', () => {
+        const handler = new DoppelgangerHandler();
+        const gameState = {
+            playerRoles: [
+                { roleId: 'doppelganger', initialRoleId: 'doppelganger' },
+                { roleId: 'villager', initialRoleId: 'villager' }
+            ],
+            currentPlayerIndex: 0
+        };
+        
+        handler.startTurn(gameState);
+        const result = handler.handleAction(gameState, 'player', 1);
+        
+        // Villager has no handler, so no nextMessage
+        expect(result.handled).toBe(true);
+        expect(result.nextMessage).toBeNull();
     });
 });

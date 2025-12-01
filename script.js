@@ -728,6 +728,9 @@ function nextStep() {
                 // Timer End Callback
                 nightActionState.timerExpired = true; // Mark timer as expired
                 
+                // Guard: currentNightRole may be null if game ended or moved to day
+                if (!currentNightRole) return;
+                
                 // Check if action was completed (set by action handlers)
                 if (nightActionState.completed) {
                     finishNightStep();
@@ -1053,6 +1056,8 @@ function handleCardClick(type, index) {
             const needsRerender = typeof result === 'object' ? result.needsRerender : false;
             // Support custom reveal target (e.g., Robber reveals their own card after swap)
             const revealTarget = typeof result === 'object' && result.revealTarget ? result.revealTarget : { type, index };
+            // Support next message for Doppelganger follow-up actions
+            const nextMessage = typeof result === 'object' ? result.nextMessage : null;
             
             if (handled) {
                 console.log(`[Handler] ${roleId} handled action:`, type, index);
@@ -1108,6 +1113,14 @@ function handleCardClick(type, index) {
                             console.log(`[Revealer] Card stays revealed permanently`);
                         }
                     }
+                }
+                
+                // Update instruction text if there's a follow-up action (e.g., Doppelganger mimicking interactive role)
+                if (nextMessage && instructionText) {
+                    // Show the follow-up instruction after revealing current card
+                    setTimeout(() => {
+                        instructionText.innerText = nextMessage;
+                    }, 2000); // Show after the reveal animation
                 }
                 
                 // Check if turn is complete
@@ -1470,9 +1483,10 @@ function createCard(type, index, label) {
     }
     
     // --- Token Rendering ---
-    // Tokens are split into two categories:
+    // Tokens are split into three categories:
     // 1. Always visible (on card-face-front/card back design): shield, mark, infection, link
     // 2. Only visible when card is revealed (on card-face-back/role side): pi-transformed-*, revealed-by-revealer
+    // 3. Only visible in REVEAL phase (final reveal): doppelganger-original
     if (cardData.tokens && cardData.tokens.length > 0) {
         // Tokens for front face (visible on card back)
         const frontTokens = cardData.tokens.filter(t => 
@@ -1480,8 +1494,11 @@ function createCard(type, index, label) {
         );
         
         // Tokens for back face (visible only when card is revealed)
+        // Note: doppelganger-original is ONLY shown in REVEAL phase, not during NIGHT
         const backTokens = cardData.tokens.filter(t => 
-            t.startsWith('pi-transformed-') || t === 'revealed-by-revealer'
+            t.startsWith('pi-transformed-') || 
+            t === 'revealed-by-revealer' ||
+            (t === 'doppelganger-original' && gamePhaseState === 'REVEAL')
         );
         
         // Render front tokens on card-face-front (the card back design)
@@ -1515,6 +1532,9 @@ function createCard(type, index, label) {
                 
                 if (tokenType === 'revealed-by-revealer') {
                     token.innerText = '👁️';
+                } else if (tokenType === 'doppelganger-original') {
+                    token.innerText = '🎭';
+                    token.title = 'This card was originally Doppelganger';
                 } else if (tokenType.startsWith('pi-transformed-')) {
                     // Show indicator for P.I. transformation
                     const transformedRole = tokenType.replace('pi-transformed-', '');
@@ -1523,7 +1543,7 @@ function createCard(type, index, label) {
                     } else if (transformedRole === 'minion') {
                         token.innerText = '👹';
                     } else if (transformedRole === 'tanner') {
-                        token.innerText = '🎭';
+                        token.innerText = '🤡';
                     } else {
                         token.innerText = '🔄';
                     }
@@ -2222,10 +2242,10 @@ function swapCards(target1, target2, options = {}) {
     const getCard = (target) => {
         if (target.type === 'player') {
             const p = playerRoles[target.index];
-            return p ? { role: p.roles.actual, ref: p } : null;
+            return p ? { role: p.roles.actual, tokens: p.tokens || [], ref: p } : null;
         } else if (target.type === 'center') {
             const c = centerCards[target.index];
-            return c ? { role: c.roleId, ref: c } : null;
+            return c ? { role: c.roleId, tokens: c.tokens || [], ref: c } : null;
         }
         return null;
     };
@@ -2238,9 +2258,11 @@ function swapCards(target1, target2, options = {}) {
         return;
     }
 
-    // Perform Swap
+    // Perform Swap - swap both roles AND tokens
     const role1 = card1.role;
     const role2 = card2.role;
+    const tokens1 = [...card1.tokens]; // Clone to avoid reference issues
+    const tokens2 = [...card2.tokens];
 
     // Update Target 1
     if (target1.type === 'player') {
@@ -2250,8 +2272,10 @@ function swapCards(target1, target2, options = {}) {
             target: target2,
             perceived: false // Swaps are usually hidden from the victim
         });
+        card1.ref.tokens = tokens2;
     } else {
         card1.ref.roleId = role2;
+        card1.ref.tokens = tokens2;
     }
 
     // Update Target 2
@@ -2262,8 +2286,10 @@ function swapCards(target1, target2, options = {}) {
             target: target1,
             perceived: false
         });
+        card2.ref.tokens = tokens1;
     } else {
         card2.ref.roleId = role1;
+        card2.ref.tokens = tokens1;
     }
     
     if (!silent) {
@@ -2882,6 +2908,7 @@ class DoppelgangerHandler extends RoleHandler {
         if (hasToken({type, index}, 'shield')) return false;
         
         this.actionState.viewed = true;
+        this.actionState.doppelgangerCardIndex = playerIdx; // Track which card was the original Doppelganger
         
         // Get Target Role
         const targetRole = gameState.playerRoles[index].roleId;
@@ -2891,24 +2918,30 @@ class DoppelgangerHandler extends RoleHandler {
         gameState.playerRoles[playerIdx].roleId = targetRole;
         gameState.playerRoles[playerIdx].mimickedRole = targetRole;
         
+        // Add token to mark this card as originally Doppelganger (only visible in REVEAL phase)
+        addToken({ type: 'player', index: playerIdx }, 'doppelganger-original');
+        
         console.log(`[Doppelganger] Mimicking ${targetRole}`);
         
         // Initialize Sub-Handler if interactive
         const handler = getRoleHandler(targetRole);
+        let nextMessage = null;
+        
         if (handler) {
             this.actionState.subHandler = handler;
-            // We need to initialize the sub-handler
-            // Note: startTurn usually returns a message, we might want to log it or ignore it
-            // The sub-handler might need specific initialization based on game state
-            handler.startTurn(gameState);
-            
-            // IMPORTANT: Some handlers (like Werewolf) check for "Lone Wolf" in startTurn.
-            // We need to ensure the gameState reflects the Doppelganger as the new role?
-            // Yes, we updated playerRoles above, so it should be fine.
+            // Initialize the sub-handler and capture its message
+            const startResult = handler.startTurn(gameState);
+            if (startResult && startResult.message) {
+                nextMessage = startResult.message;
+            }
         }
         
-        // Doppelganger views target's card
-        return { handled: true, shouldReveal: true };
+        // Doppelganger views target's card, include nextMessage if there's a follow-up action
+        return { 
+            handled: true, 
+            shouldReveal: true,
+            nextMessage: nextMessage  // Tell UI to show this message for follow-up action
+        };
     }
 
     isTurnComplete(gameState) {
@@ -3153,10 +3186,18 @@ class RevealerHandler extends RoleHandler {
         const targetRole = gameState.playerRoles[index].roleId;
         const nonVillageRoles = ['werewolf', 'minion', 'tanner', 'dreamwolf', 'mysticwolf'];
         
-        if (nonVillageRoles.includes(targetRole)) {
-            // Werewolf/Tanner - flip back down (Revealer sees it but others don't)
+        // Also check if P.I. has transformed to werewolf team
+        const hasPITransformedToWolf = hasToken({ type, index }, 'pi-transformed-werewolf') ||
+                                        hasToken({ type, index }, 'pi-transformed-minion') ||
+                                        hasToken({ type, index }, 'pi-transformed-tanner') ||
+                                        hasToken({ type, index }, 'pi-transformed-dreamwolf') ||
+                                        hasToken({ type, index }, 'pi-transformed-mysticwolf');
+        
+        if (nonVillageRoles.includes(targetRole) || hasPITransformedToWolf) {
+            // Werewolf/Tanner/Transformed P.I. - flip back down (Revealer sees it but others don't)
             this.actionState.shouldStayRevealed = false;
-            console.log(`[Revealer] Revealed Player ${index} (${targetRole}) - flipping back down`);
+            const reason = hasPITransformedToWolf ? `P.I. transformed` : targetRole;
+            console.log(`[Revealer] Revealed Player ${index} (${reason}) - flipping back down`);
         } else {
             // Village team - stays revealed for everyone
             this.actionState.shouldStayRevealed = true;
@@ -3380,5 +3421,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getPlayerRoles: () => playerRoles,
         setCenterCards: (cards) => { centerCards = cards; },
         getCenterCards: () => centerCards,
+        setGamePhaseState: (state) => { gamePhaseState = state; },
+        getGamePhaseState: () => gamePhaseState,
     };
 }

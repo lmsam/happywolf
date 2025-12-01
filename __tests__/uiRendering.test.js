@@ -3,7 +3,8 @@ const {
     setPlayerRoles, 
     setCenterCards,
     addToken,
-    setCardInteractionState
+    setCardInteractionState,
+    setGamePhaseState
 } = require('../script');
 
 // Mock global variables
@@ -133,5 +134,73 @@ describe('Token Visibility on Card Back vs Front', () => {
         expect(container).not.toBeNull();
         const shieldToken = container.querySelector('.token.shield');
         expect(shieldToken).not.toBeNull();
+    });
+});
+
+describe('Doppelganger Token Visibility', () => {
+    beforeEach(() => {
+        setPlayerRoles([
+            { id: 1, roleId: 'witch', roles: { actual: 'witch' }, initialRoleId: 'doppelganger', tokens: [], interactionState: {} }
+        ]);
+        setGamePhaseState('NIGHT'); // Default to NIGHT phase
+    });
+
+    test('Doppelganger token should NOT show during NIGHT phase', () => {
+        setGamePhaseState('NIGHT');
+        addToken({ type: 'player', index: 0 }, 'doppelganger-original');
+        
+        const card = createCard('player', 0, 'Player 1');
+        
+        // During NIGHT, doppelganger token should be hidden on both faces
+        const faceFront = card.querySelector('.card-face-front');
+        const faceBack = card.querySelector('.card-face-back');
+        
+        // Check front face - should NOT have doppelganger token
+        const frontContainer = faceFront.querySelector('.token-container');
+        if (frontContainer) {
+            const doppelToken = frontContainer.querySelector('.token.doppelganger-original');
+            expect(doppelToken).toBeNull();
+        }
+        
+        // Check back face - should NOT have doppelganger token (only shows in REVEAL phase)
+        const backContainer = faceBack.querySelector('.token-container');
+        if (backContainer) {
+            const doppelToken = backContainer.querySelector('.token.doppelganger-original');
+            expect(doppelToken).toBeNull();
+        }
+    });
+
+    test('Doppelganger token should show during REVEAL phase', () => {
+        setGamePhaseState('REVEAL');
+        addToken({ type: 'player', index: 0 }, 'doppelganger-original');
+        
+        const card = createCard('player', 0, 'Player 1');
+        
+        // During REVEAL, doppelganger token should be visible on back face
+        const faceBack = card.querySelector('.card-face-back');
+        const container = faceBack.querySelector('.token-container');
+        
+        expect(container).not.toBeNull();
+        const doppelToken = container.querySelector('.token.doppelganger-original');
+        expect(doppelToken).not.toBeNull();
+        expect(doppelToken.innerText).toBe('🎭');
+    });
+
+    test('Seer viewing Doppelganger during NIGHT should NOT see the token', () => {
+        setGamePhaseState('NIGHT');
+        addToken({ type: 'player', index: 0 }, 'doppelganger-original');
+        
+        // Even when card is "revealed" during night (Seer action), token should be hidden
+        const card = createCard('player', 0, 'Player 1');
+        card.classList.add('revealed'); // Simulate Seer viewing the card
+        
+        // The doppelganger token should still be hidden
+        const faceBack = card.querySelector('.card-face-back');
+        const container = faceBack.querySelector('.token-container');
+        
+        if (container) {
+            const doppelToken = container.querySelector('.token.doppelganger-original');
+            expect(doppelToken).toBeNull();
+        }
     });
 });

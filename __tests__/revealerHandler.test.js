@@ -219,5 +219,48 @@ describe('RevealerHandler', () => {
             
             expect(handler.actionState.shouldStayRevealed).toBe(false); // Current role is werewolf
         });
+        
+        test('should flip back down P.I. who transformed to werewolf team', () => {
+            // P.I. card still shows as 'pi' role, but has transformation token
+            gameState.playerRoles[2].roleId = 'pi';
+            gameState.playerRoles[2].initialRoleId = 'pi';
+            addToken({ type: 'player', index: 2 }, 'pi-transformed-werewolf');
+            
+            const result = handler.handleAction(gameState, 'player', 2);
+            
+            expect(result.handled).toBe(true);
+            expect(handler.actionState.shouldStayRevealed).toBe(false); // P.I. is now wolf team
+        });
+        
+        test('should flip back down P.I. who transformed to minion', () => {
+            gameState.playerRoles[2].roleId = 'pi';
+            gameState.playerRoles[2].initialRoleId = 'pi';
+            addToken({ type: 'player', index: 2 }, 'pi-transformed-minion');
+            
+            const result = handler.handleAction(gameState, 'player', 2);
+            
+            expect(handler.actionState.shouldStayRevealed).toBe(false);
+        });
+        
+        test('should flip back down P.I. who transformed to tanner', () => {
+            gameState.playerRoles[2].roleId = 'pi';
+            gameState.playerRoles[2].initialRoleId = 'pi';
+            addToken({ type: 'player', index: 2 }, 'pi-transformed-tanner');
+            
+            const result = handler.handleAction(gameState, 'player', 2);
+            
+            expect(handler.actionState.shouldStayRevealed).toBe(false);
+        });
+        
+        test('should keep revealed P.I. who did NOT transform (stayed village)', () => {
+            // P.I. viewed 2 villagers and didn't transform
+            gameState.playerRoles[2].roleId = 'pi';
+            gameState.playerRoles[2].initialRoleId = 'pi';
+            // No transformation token
+            
+            const result = handler.handleAction(gameState, 'player', 2);
+            
+            expect(handler.actionState.shouldStayRevealed).toBe(true); // P.I. is still village team
+        });
     });
 });
