@@ -185,7 +185,7 @@ function clearAllInteractionStates() {
       "selected",
       "animating",
       "locked",
-      "highlighted"
+      "highlighted",
     );
   }
 }
@@ -445,16 +445,16 @@ function handleSeerAction(type, index) {
 
 ### 3. **標記狀態 (Marking States)**
 
-| 狀態     | 角色     | Token    | 效果                        | UI 顯示         | 可見性             |
-| -------- | -------- | -------- | --------------------------- | --------------- | ------------------ |
-| `marked` | Revealer | 📍 Mark  | 如果係狼人/皮匠，卡保持翻開 | 翻開 + 標記圖示 | 所有人（白天）     |
-| `cursed` | Cursed   | 🌙 Curse | 被狼人查看時變狼人          | Curse 圖示？    | 只有 Cursed 自己知 |
+| 狀態       | 角色     | Token       | 效果                     | UI 顯示        | 可見性             |
+| ---------- | -------- | ----------- | ------------------------ | -------------- | ------------------ |
+| `revealed` | Revealer | 👁️ Revealed | 村民陣營被翻開後保持公開 | 翻開 + 👁️ 圖示 | 所有人（白天）     |
+| `cursed`   | Cursed   | 🌙 Curse    | 被狼人查看時變狼人       | Curse 圖示？   | 只有 Cursed 自己知 |
 
 **UI 設計：**
 
 ```html
-<!-- Revealer Mark -->
-<div class="card-token mark-token">
+<!-- Revealer Token -->
+<div class="card-token revealed-token">
   <i class="fa fa-eye"></i>
 </div>
 
@@ -512,10 +512,10 @@ function handleSeerAction(type, index) {
 
 ### 7. **轉換狀態 (Transformation States)**
 
-| 狀態          | 角色               | Token | 效果         | UI 顯示            | 可見性     |
-| ------------- | ------------------ | ----- | ------------ | ------------------ | ---------- |
-| `transformed` | P.I., Doppelgänger | -     | 角色已轉換   | 無 Token，內部追蹤 | 只有自己知 |
-| `mimicked`    | Doppelgänger       | -     | 模仿其他角色 | 無 Token，內部追蹤 | 只有自己知 |
+| 狀態          | 角色         | Token       | 效果         | UI 顯示            | 可見性         |
+| ------------- | ------------ | ----------- | ------------ | ------------------ | -------------- |
+| `transformed` | P.I.         | 🐺/👺/🤡/🔄 | 變成對應角色 | 牌背顯示對應圖示   | 只有翻開時見到 |
+| `mimicked`    | Doppelgänger | -           | 模仿其他角色 | 無 Token，內部追蹤 | 只有自己知     |
 
 ---
 

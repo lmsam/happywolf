@@ -11,19 +11,16 @@
 ### **需要重構嘅部分**
 
 1. **數據結構** (Data Structures)
-
    - Player Object
    - Card Object
    - Game State
 
 2. **核心邏輯** (Core Logic)
-
    - 角色更新機制
    - 卡牌交換機制
    - 狀態驗證機制
 
 3. **UI 系統** (UI System)
-
    - Token 顯示
    - 卡牌狀態視覺化
    - 可見性控制
@@ -39,18 +36,15 @@
 ### **主要目標**
 
 1. **Flexibility (靈活性)**
-
    - 輕鬆加入新角色
    - 支援複雜機制（保護、感染、連結）
 
 2. **Maintainability (可維護性)**
-
    - 統一嘅 API
    - 清晰嘅數據流
    - 完整嘅驗證機制
 
 3. **Correctness (正確性)**
-
    - 準確追蹤角色狀態
    - 正確處理所有邊界情況
    - 完整嘅測試覆蓋
@@ -119,7 +113,6 @@
    ```
 
 3. **實現核心方法**
-
    - `updatePlayerRole()`
    - `swapCards()`
    - `validateGameState()`
@@ -176,7 +169,6 @@
    ```
 
 3. **CSS 樣式**
-
    - Token 圖示設計
    - 位置規劃
    - 動畫效果
@@ -218,12 +210,11 @@
        perceived1: true,
        perceived2: false,
        event: "robber_steal",
-     }
+     },
    );
    ```
 
 2. **重構其他角色**
-
    - Drunk
    - Troublemaker
    - Witch
@@ -250,22 +241,31 @@
 #### **工作項目**
 
 1. **實現 Sentinel** ✅ 已完成
-
    - Shield Token 邏輯
    - 交換阻止機制
 
-2. **實現 P.I.** 📋 下一步
+2. **實現 P.I.** ✅ 已完成
 
-   - 角色轉換邏輯
-   - `cardTransformed` 追蹤
+3. **實現 Revealer** ✅ 已完成
 
-3. **實現其他角色**
-   - 按優先級逐個加入
+4. **實現 Mystic Wolf** ✅ 已完成
+
+5. **實現 Apprentice Seer** ✅ 已完成
+
+6. **實現 Witch** ✅ 已完成
+
+7. **實現 Curator** 📋 下一步
+
+8. **實現 Village Idiot** 📋 下一步
 
 #### **驗收標準**
 
 - [x] Sentinel 正常運作
-- [ ] P.I. 正常運作
+- [x] P.I. 正常運作
+- [x] Revealer 正常運作
+- [x] Mystic Wolf 正常運作
+- [x] Apprentice Seer 正常運作
+- [x] Witch 正常運作
 - [x] 唔影響現有角色
 - [x] 系統保持穩定
 
@@ -330,7 +330,7 @@ describe("swapCards", () => {
     cards[0].tokens.shielded = true;
     const result = swapCards(
       { type: "player", index: 0 },
-      { type: "player", index: 1 }
+      { type: "player", index: 1 },
     );
     expect(result.success).toBe(false);
   });
@@ -423,10 +423,16 @@ describe("Visual Regression", () => {
 ### **Phase 4 完成標準** 🔄 進行中
 
 - [x] Sentinel 角色實現
-- [ ] P.I. 角色實現
+- [x] P.I. 角色實現
+- [x] Revealer 角色實現
+- [x] Mystic Wolf 角色實現
+- [x] Apprentice Seer 角色實現
+- [x] Witch 角色實現
+- [ ] Curator 角色實現
+- [x] Village Idiot 角色實現
 - [x] 新角色測試通過
 - [x] 系統穩定性驗證
-- [ ] 文檔更新完成
+- [x] 文檔更新完成
 
 ---
 
@@ -476,14 +482,12 @@ describe("Visual Regression", () => {
 ## 📝 下一步
 
 1. **Review 所有設計文檔**
-
    - `ARCHITECTURE_ANALYSIS.md`
    - `CARD_STATES_AND_TOKENS.md`
    - `PLAYER_ROLE_STATES.md`
    - `REFACTORING_PLAN.md` (本文檔)
 
 2. **決定開始時間**
-
    - 確認有足夠時間
    - 準備測試環境
 
@@ -500,43 +504,32 @@ describe("Visual Regression", () => {
 
 ---
 
-**最後更新**: 2025-11-30
-**狀態**: 🔄 Phase 4 進行中 - 準備實現 P.I. 角色
+**最後更新**: 2026-02-07
+**狀態**: 🔄 Phase 4 進行中 - 準備實現 Curator 角色
 
 ---
 
-## 🎯 下一步：P.I. (Paranormal Investigator) 實現計劃
+---
 
-### **角色規則**
-- 夜晚可以查看最多 2 張其他玩家嘅牌
-- 如果查看到狼人或爪牙，P.I. **立即變成該角色** 並停止查看
-- 可以選擇只查看 1 張就停止
+## 🎯 下一步：Curator & Village Idiot 實現計劃
 
-### **實現要點**
+### **Curator (策展人)**
 
-1. **PIHandler Class**
-   - `actionState`: `{ viewedCount: 0, transformed: false, transformedTo: null }`
-   - `handleAction()`: 查看玩家牌，檢查係咪狼人陣營
-   - `isTurnComplete()`: 查看 2 張或已轉換
+- **能力**: 放置一個 Artifact Token 給一位玩家。該玩家獲得新能力（或負面效果）。
+- **實現要點**:
+  - Token 系統擴充 (Artifact Token)
+  - `CuratorHandler`
+  - Token 效果邏輯
 
-2. **角色轉換邏輯**
-   - 如果睇到 `werewolf`, `minion`, `dreamwolf` → 變成該角色
-   - 更新 `perceivedRole` 同 `actualRole`
-   - 記錄到 `roleHistory`
+### **Village Idiot (村莊白痴)** ✅ 已完成
 
-3. **Shield 互動**
-   - P.I. 無法查看被盾嘅玩家
+- **能力**: 將所有玩家（包括自己）的座位向左或向右移動一格。
+- **實現要點**:
+  - `VillageIdiotHandler`
+  - 座位移動邏輯 (Shift Seat)
+  - 確保移動後，其他角色的行動目標正確（可能需要更新 `seatIndex`）
 
-### **測試用例**
+### **Dream Wolf (夢遊狼)**
 
-```javascript
-describe('PIHandler', () => {
-    test('should allow viewing up to 2 player cards');
-    test('should transform into Werewolf if viewed');
-    test('should transform into Minion if viewed');
-    test('should NOT transform if viewing Villager');
-    test('should stop immediately after transformation');
-    test('should NOT be able to view shielded player');
-    test('P.I. can choose to stop after 1 view');
-});
-```
+- **能力**: 狼人陣營，但不與其他狼人一起醒來。
+- **實現**: 已完成基本邏輯（語音提示、孤狼判定），無需 Handler。

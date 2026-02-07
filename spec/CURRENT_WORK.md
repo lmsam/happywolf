@@ -9,14 +9,12 @@
 將整個 App 分拆成三個獨立頁面：
 
 1. **`index.html`** - 設定頁面 (Setup Only)
-
    - 玩家入座
    - 選擇角色卡牌
    - 遊戲設定 (音量、時間、介面模式)
    - 按「確認牌庫」後，洗牌、派牌，然後跳轉去遊戲頁面
 
 2. **`desktop.html`** - Desktop 遊戲介面 (NEW)
-
    - 圓枱式排位 (Round Table Grid)
    - 適合大螢幕、滑鼠操作
 
@@ -76,26 +74,30 @@
   - 更新咗 Werewolf highlighting 邏輯以包括 Dream Wolf
   - **Dream Wolf 語音**: 動態檢查牌庫，如果有 Dream Wolf，狼人語音會加句提示
   - **孤狼邏輯**: 修正咗孤狼判定，有 Dream Wolf 時普通狼人唔算孤狼
+  - **Paranormal Investigator (偵探)**: 村民陣營，可以查看最多 2 張其他玩家嘅牌。如果見到狼人、皮匠或爪牙，會變成該角色（但保持查看能力）。
+  - **Revealer**: 村民陣營，翻開一位玩家嘅牌。如果係村民陣營，牌會保持翻開；如果係狼人/皮匠，牌會翻返轉頭。
+  - **Mystic Wolf**: 狼人陣營，可以查看一位其他玩家嘅牌。
+  - **Village Idiot**: 村民陣營，將所有玩家的卡牌向左或右移動一格。
 
 ### 📚 角色行動次序 (Wake Order Reference)
 
 根據官方 One Night Ultimate Werewolf Daybreak 規則：
 
 1. **Doppelgänger (化身幽靈)**
-2. **Sentinel** ← Daybreak 新角色（未實現）
+2. **Sentinel** ← Daybreak 新角色 ✅ 已實現
 3. **Werewolves (狼人)** - 包括 Alpha Wolf, Mystic Wolf, Dream Wolf
 4. **Minion (爪牙)**
 5. **Masons (守夜人)**
 6. **Seer (預言家)**
 7. **Apprentice Seer (學徒預言家)** ← Daybreak 新角色 ✅ 已實現
-8. **Paranormal Investigator (偵探)** ← Daybreak 新角色（未實現）
+8. **Paranormal Investigator (偵探)** ← Daybreak 新角色 ✅ 已實現
 9. **Robber (強盜)**
 10. **Witch (女巫)** ← Daybreak 新角色 ✅ 已實現
 11. **Troublemaker (搗蛋鬼)**
-12. **Village Idiot** ← Daybreak 新角色（未實現）
+12. **Village Idiot** ← Daybreak 新角色 ✅ 已實現
 13. **Drunk (酒鬼)**
 14. **Insomniac (失眠者)**
-15. **Revealer** ← Daybreak 新角色（未實現）
+15. **Revealer** ← Daybreak 新角色 ✅ 已實現
 16. **Curator** ← Daybreak 新角色（未實現）
 
 **備註**: Dream Wolf 唔會單獨醒來（wake order = -1），佢會喺 Werewolf turn 時被其他狼人見到。
@@ -106,7 +108,6 @@
    - 原因：`startPeekPhase()` 會立即顯示 Game Phase UI，阻止了 redirect
    - 已修正：`confirmDeckBtn` 改為直接 redirect
 2. **Init 錯誤**: `mobile.html` 載入時報錯 `Cannot set properties of null`
-
    - 原因：`renderLibrary()` 嘗試存取不存在的 Setup UI 元素
    - 已修正：分拆 `initSetup` 和 `initGame`
 
@@ -146,11 +147,13 @@
 
 ### 🔄 進行中 (In Progress)
 
-- [ ] 實現其他 Daybreak 角色（Paranormal Investigator 等）
+- [ ] 實現其他 Daybreak 角色（Curator 等）
+- [x] 實現 Village Idiot (白痴)
 
 ### 🐛 已知 Bug (Known Bugs)
 
 #### Bug #1: 神秘狼不計入狼人認狼
+
 - **嚴重性**: 高
 - **描述**: 神秘狼應該係狼人一種，狼人開眼時應該計埋佢，但依家會漏咗佢，導致好易變成孤狼情況
 - **預期行為**: 狼人回合時，神秘狼同普通狼人一齊開眼互相認識
@@ -158,13 +161,15 @@
 - **修復方案**: 將 mysticwolf 加入 WerewolfHandler 的狼人識別邏輯 (filter 條件加入 `p.roles.actual === 'mysticwolf'`)
 
 #### Bug #2: P.I. 轉換 Token 過早顯示
+
 - **嚴重性**: 中
 - **描述**: P.I. 揭開狼隊或皮匠後會變成嗰隊，依家有個 token indicator 會喺牌背面時都顯示喺右上角，咁其他人就知道佢變咗壞人
 - **預期行為**: 轉換 token 應該只顯示喺牌嘅「正面」，背面時隱藏
 - **狀態**: ✅ 已修復
-- **修復方案**: 將 token 分成兩類渲染 - shield/mark 等放在 card-face-front（牌背），pi-transformed-*/revealed-by-revealer 放在 card-face-back（牌面）
+- **修復方案**: 將 token 分成兩類渲染 - shield/mark 等放在 card-face-front（牌背），pi-transformed-\*/revealed-by-revealer 放在 card-face-back（牌面）
 
 #### Bug #3: 失眠者心急點擊導致牌唔翻開
+
 - **嚴重性**: 低
 - **描述**: 失眠者喺語音未讀完前心急㩒咗自己張牌，會導致牌冇翻開但行動已完成
 - **預期行為**: 點擊後牌應該要翻開顯示，即使語音未完成
@@ -193,5 +198,5 @@
 
 ---
 
-**最後更新**: 2025-11-30 
+**最後更新**: 2025-11-30
 **狀態**: ✅ Handler 系統重構完成

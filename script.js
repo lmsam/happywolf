@@ -53,7 +53,8 @@ const i18n = {
             sentinel: "守衛，請將盾牌標記放在一位玩家的卡牌上。",
             pi: "偵探，請查看最多兩張玩家卡牌。如果你睇到狼人或爪牙，你會變成該角色。",
             mysticwolf: "神秘狼，你可以睇一張其他玩家嘅牌。",
-            revealer: "揭示者，翻開一張玩家牌。如果係狼人或皮匠，要翻返落面。"
+            revealer: "揭示者，翻開一張玩家牌。如果係狼人或皮匠，要翻返落面。",
+            villageidiot: "白痴，請將所有玩家嘅牌向左或向右移動。"
         },
         shieldBlocked: "你被盾牌保護,無法行動。",
         loneWolf: "你係唯一一隻狼，可以睇一張中間卡。",
@@ -112,7 +113,8 @@ const i18n = {
             sentinel: "Sentinel, place a shield token on a player card.",
             pi: "P.I., view up to 2 player cards. If you see a Werewolf or Minion, you become that role.",
             mysticwolf: "Mystic Wolf, you may look at one other player's card.",
-            revealer: "Revealer, flip one player's card face up. If Werewolf or Tanner, flip it back."
+            revealer: "Revealer, flip one player's card face up. If Werewolf or Tanner, flip it back.",
+            villageidiot: "Village Idiot, shift all cards left or right."
         },
         shieldBlocked: "You are shielded and cannot act.",
         loneWolf: "You are alone. You may view one center card.",
@@ -281,6 +283,16 @@ const rolesData = [
         scriptStart: { 'zh-HK': '揭示者請擘大眼，翻開一張其他玩家嘅牌。如果係狼人或者皮匠，翻返落面', 'en-US': 'Revealer, wake up. Flip one player\'s card face up. If it is a Werewolf or Tanner, flip it back face down.' },
         scriptEnd: { 'zh-HK': '揭示者請閉眼', 'en-US': 'Revealer, close your eyes.' }
     },
+    { 
+        id: 'villageidiot', 
+        name: { 'zh-HK': '白痴', 'en-US': 'Village Idiot' },
+        desc: { 'zh-HK': '將所有玩家的卡牌向左或向右移動一格。', 'en-US': 'Shift all player cards one space left or right.' },
+        tips: { 'zh-HK': '製造混亂！記住換完之後你自己係邊張！', 'en-US': 'create chaos! Remember where your card went!' },
+        team: 'village',
+        wakeOrder: 12, duration: 10, 
+        scriptStart: { 'zh-HK': '白痴請擘大眼，你可以選擇將所有玩家嘅牌向左移，或者向右移', 'en-US': 'Village Idiot, wake up. You may shift all player cards to the left or to the right.' },
+        scriptEnd: { 'zh-HK': '白痴請閉眼', 'en-US': 'Village Idiot, close your eyes.' }
+    },
     { id: 'villager', name: { 'zh-HK': '村民', 'en-US': 'Villager' }, desc: { 'zh-HK': '無特殊能力，靠推理搵出狼人。', 'en-US': 'No special ability. Find Werewolves by deduction.' }, tips: { 'zh-HK': '專心聽人講嘢，搵出破綻！', 'en-US': 'Listen carefully and find inconsistencies!' }, team: 'village', wakeOrder: -1 },
     { id: 'tanner', name: { 'zh-HK': '皮匠', 'en-US': 'Tanner' }, desc: { 'zh-HK': '如果你死咗，你就贏。', 'en-US': 'You win if you die.' }, tips: { 'zh-HK': '扮到好似狼人咁，引人投你！', 'en-US': 'Act suspicious so people vote for you!' }, team: 'tanner', wakeOrder: -1 },
     { id: 'hunter', name: { 'zh-HK': '獵人', 'en-US': 'Hunter' }, desc: { 'zh-HK': '如果你死咗，可以帶走另一個人。', 'en-US': 'If you die, you take someone with you.' }, tips: { 'zh-HK': '死都要拉個墊屍底！', 'en-US': 'Take a Werewolf down with you!' }, team: 'village', wakeOrder: -1 }
@@ -444,7 +456,8 @@ const roleImageMap = {
     'witch': 'Witch.png',
     'pi': 'PI.png',
     'mysticwolf': 'MysticWolf.png',
-    'revealer': 'Revealer.png'
+    'revealer': 'Revealer.png',
+    'villageidiot': 'Idiot.png'
 };
 
 function renderLibrary() {
@@ -1127,7 +1140,17 @@ function handleCardClick(type, index) {
                 if (handler.isTurnComplete(gameState)) {
                     console.log(`[Handler] ${roleId} turn complete`);
                     nightActionState.completed = true; // Block further clicks immediately
-                    setTimeout(finishNightStep, 2000);
+                    
+                    // For Werewolf (Lone Wolf potentially), do NOT finish early.
+                    // Let the timer run out so players don't know it was a short turn (indicating 1 wolf vs 2+ wolves).
+                    if (roleId !== 'werewolf') {
+                        setTimeout(finishNightStep, 2000);
+                    } else {
+                        console.log(`[Handler] Werewolf turn complete, but waiting for timer to expire to hide Lone Wolf status.`);
+                        // Do NOT change instructionText.
+                        // Let the timer continue to count down naturally.
+                        // The user will see the original "Werewolf action..." and timer decreasing.
+                    }
                 }
                 
                 return; // Handler processed the action
@@ -1283,6 +1306,85 @@ function renderTable() {
             startVotingPhase();
         };
         instructionBanner.appendChild(voteBtn);
+    }
+
+    // --- Village Idiot UI Controls ---
+    // Inject controls if current role is Village Idiot and not fake
+    const existingControls = instructionBanner.querySelector('#village-idiot-controls');
+    
+    if (gamePhaseState === 'NIGHT' && currentNightRole && currentNightRole.id === 'villageidiot' && !currentNightRole.isFake && !nightActionState.completed) {
+        if (!existingControls) {
+            const controlsDetails = document.createElement('div');
+            controlsDetails.id = 'village-idiot-controls';
+            controlsDetails.style.marginTop = '10px';
+            controlsDetails.style.display = 'flex';
+            controlsDetails.style.gap = '10px';
+            controlsDetails.style.justifyContent = 'center';
+
+            const btnLeft = document.createElement('button');
+            btnLeft.className = 'comic-btn small';
+            btnLeft.innerText = '⬅️';
+            btnLeft.style.padding = '5px 15px';
+            btnLeft.onclick = () => {
+                const handler = getRoleHandler('villageidiot');
+                if (handler) {
+                    const result = handler.handleAction({ playerRoles: playerRoles }, 'ui', 'shift_left');
+                    if (result && result.handled) {
+                        // Visual feedback
+                        btnLeft.classList.add('selected');
+                        btnLeft.style.backgroundColor = '#4CAF50';
+                        btnRight.disabled = true;
+                        btnLeft.disabled = true;
+                        
+                        if (result.needsRerender) renderTable();
+                        
+                        // Remove controls after delay
+                        setTimeout(() => {
+                            const controls = document.getElementById('village-idiot-controls');
+                            if (controls) controls.remove();
+                        }, 2000);
+                    }
+                }
+            };
+
+            const btnRight = document.createElement('button');
+            btnRight.className = 'comic-btn small';
+            btnRight.innerText = '➡️';
+            btnRight.style.padding = '5px 15px';
+            btnRight.onclick = () => {
+                const handler = getRoleHandler('villageidiot');
+                if (handler) {
+                    const result = handler.handleAction({ playerRoles: playerRoles }, 'ui', 'shift_right');
+                    if (result && result.handled) {
+                        // Visual feedback
+                        btnRight.classList.add('selected');
+                        btnRight.style.backgroundColor = '#4CAF50';
+                        btnLeft.disabled = true;
+                        btnRight.disabled = true;
+                        
+                        if (result.needsRerender) renderTable();
+                        
+                        // Remove controls after delay
+                        setTimeout(() => {
+                            const controls = document.getElementById('village-idiot-controls');
+                            if (controls) controls.remove();
+                        }, 2000);
+                    }
+                }
+            };
+
+            controlsDetails.appendChild(btnLeft);
+            controlsDetails.appendChild(btnRight);
+            instructionBanner.appendChild(controlsDetails);
+        }
+    } else {
+        // Clean up if not needed
+        // MUST check inside instructionBanner because it might be detached during renderTable
+        if (existingControls) existingControls.remove();
+        
+        // Also check document just in case
+        const strayControls = document.getElementById('village-idiot-controls');
+        if (strayControls) strayControls.remove();
     }
     
     // Always append to centerZone (even if reused)
@@ -3212,6 +3314,112 @@ class RevealerHandler extends RoleHandler {
     }
 }
 
+class VillageIdiotHandler extends RoleHandler {
+    constructor() {
+        super('villageidiot');
+        this.actionState = {
+            shifted: false,
+            direction: null // 'left' or 'right'
+        };
+    }
+
+    startTurn(gameState) {
+        this.actionState = {
+            shifted: false,
+            direction: null
+        };
+        
+        return {
+            message: i18n[currentLang]?.roleAction?.villageidiot || "Village Idiot, shift all cards left or right.",
+            canInteract: true,
+            // Custom UI hint for direction buttons maybe?
+            customUI: 'shift-controls' 
+        };
+    }
+
+    handleAction(gameState, type, value) {
+        // value can be 'shift_left' or 'shift_right'
+        if (this.actionState.shifted) return false;
+        
+        // Check action type
+        // We might receive type='ui_action' and value='shift_left' from UI
+        // Or specific click? 
+        // For MVP, if we click Left Player -> Shift Left?
+        // Let's support both 'shift_left'/'shift_right' direct commands
+        
+        let direction = null;
+        if (value === 'shift_left' || value === 'left') direction = 'left';
+        if (value === 'shift_right' || value === 'right') direction = 'right';
+        
+        if (!direction) return false;
+        
+        // Perform Shift
+        const roles = gameState.playerRoles;
+        if (!roles || roles.length < 2) return false;
+        
+        // Log before
+        console.log(`[Village Idiot] Shifting roles ${direction}...`);
+        
+        // Identify movable indices (Exclude self and shielded)
+        const currentPlayerIndex = gameState.currentPlayerIndex !== undefined ? gameState.currentPlayerIndex : roles.findIndex(p => p.roles.actual === 'villageidiot');
+        const movableIndices = [];
+        
+        roles.forEach((p, i) => {
+            // Skip self
+            if (i === currentPlayerIndex) return;
+            
+            // Skip shielded players
+            if (p.tokens && p.tokens.includes('shield')) return;
+            
+            movableIndices.push(i);
+        });
+        
+        if (movableIndices.length < 2) {
+            console.log("[Village Idiot] Not enough movable players to shift.");
+            return { handled: true, shouldReveal: false };
+        }
+        
+        // Extract movable items (roles AND tokens)
+        const movableItems = movableIndices.map(index => ({
+            roleId: roles[index].roles.actual,
+            tokens: [...(roles[index].tokens || [])]
+        }));
+        
+        if (direction === 'right') {
+            // Right Shift on subset: Last -> First, First -> Second...
+            // Array: unshift(pop())
+            const last = movableItems.pop();
+            movableItems.unshift(last);
+        } else {
+            // Left Shift on subset: First -> Last, Second -> First...
+            // Array: push(shift())
+            const first = movableItems.shift();
+            movableItems.push(first);
+        }
+        
+        // Apply back to gameState
+        movableIndices.forEach((playerIndex, i) => {
+            const newItem = movableItems[i];
+            roles[playerIndex].roles.actual = newItem.roleId;
+            roles[playerIndex].tokens = newItem.tokens;
+            
+            // Update history for debugging/tracking?
+            // roles[playerIndex].roleHistory.push({ event: 'villageidiot_shift', role: newItem.roleId });
+        });
+        
+        this.actionState.shifted = true;
+        this.actionState.direction = direction;
+        
+        // Force refresh UI as cards moved physically
+        // In real DOM, we might animate this. For now, re-render.
+        return { handled: true, shouldReveal: false, needsRerender: true, forceRefresh: true };
+    }
+
+    isTurnComplete(gameState) {
+        return this.actionState.shifted;
+    }
+}
+
 // --- Role Handler Registry ---
 const roleHandlers = {
     'seer': new SeerHandler(),
@@ -3227,8 +3435,11 @@ const roleHandlers = {
     'sentinel': new SentinelHandler(),
     'pi': new PIHandler(),
     'mysticwolf': new MysticWolfHandler(),
-    'revealer': new RevealerHandler()
+    'revealer': new RevealerHandler(),
+    'villageidiot': new VillageIdiotHandler()
 };
+
+
 
 // Helper function to get handler for a role
 function getRoleHandler(roleId) {
@@ -3415,6 +3626,7 @@ if (typeof module !== 'undefined' && module.exports) {
         PIHandler,
         MysticWolfHandler,
         RevealerHandler,
+        VillageIdiotHandler,
         
         // Test Helpers
         setPlayerRoles: (roles) => { playerRoles = roles; },

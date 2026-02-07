@@ -168,6 +168,13 @@ The game uses two primary card display formats:
 
 > A dramatic anime character forcefully pulling a dark cloak off a shadowy figure to reveal a hidden wolf claw or glowing eye, beams of golden light piercing through the darkness, intense action pose, high contrast, Shonen anime style, exposing the enemy's true form.
 
+### 20. Village Idiot (白痴)
+
+**Concept:** A confused, chaotic character who shifts everyone's cards.
+**Prompt:**
+
+> A clumsy anime character with a blank, confused expression, scratching their head, wearing mismatched clothes, standing in the middle of a village square with glowing arrows on the ground pointing left and right in a circle, cards flying around them in a chaotic mini-tornado, comic sweat drops, dizzy spiral eyes, localized whirlwind effect, bright colors, Shonen anime style, humorous and chaotic.
+
 ### 19. Sentinel (守衛)
 
 **Concept:** An immovable shield defender.
