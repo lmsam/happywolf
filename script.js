@@ -457,7 +457,7 @@ const roleImageMap = {
     'pi': 'PI.png',
     'mysticwolf': 'MysticWolf.png',
     'revealer': 'Revealer.png',
-    'villageidiot': 'Idiot.png'
+    'villageidiot': 'idiot.png'
 };
 
 function renderLibrary() {
